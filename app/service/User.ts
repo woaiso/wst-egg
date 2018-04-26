@@ -1,4 +1,5 @@
 import { Service } from 'egg';
+import GithubAuth from './GithubAuth';
 
 /**
  * user Service
@@ -13,6 +14,10 @@ export default class User extends Service {
    */
   public async login(userName: string, password: string) {
     return `hi, ${userName} - ${password}`;
+  }
+
+  public getService(){
+    return new GithubAuth().getUserService();
   }
 
 }

@@ -13,10 +13,6 @@ const plugin: EggPlugin = {
     enable: true,
     package: 'egg-passport-github',
   },
-  mongo: {
-    enable: true,
-    package: 'egg-mongo-native',
-  },
 };
 
 export default plugin;

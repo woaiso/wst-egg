@@ -14,10 +14,6 @@
       "warn"
     ],
     "space-before-function-paren": false,
-    "interface-name": [
-      true,
-      "never-prefix"
-    ],
     "adjacent-overload-signatures": true,
     "member-access": [
       false
