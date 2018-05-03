@@ -1,32 +1,46 @@
-import Auth, { AuthModel } from './../model/Auth';
+import { Service } from 'egg';
+import log from '../utils/log';
+import Auth, { IAuthModel } from './../model/Auth';
+import User from './../model/User';
+import UserService from './User';
 
 export interface IAuth {
-    login( auth: AuthModel ): Promise<any>;
+    login( auth: IAuthModel ): Promise<any>;
 }
 
-export default class Authorization implements IAuth {
+export interface IGithubModel {
+    provider: 'github';
+}
+
+export default class AuthorizationService extends Service implements IAuth {
     /**
      * 用户登录
      * @param auth 登录信息
      */
-    public login( auth: AuthModel ) {
+    public login( authInfo ) {
         return new Promise( async ( resolve, reject ) => {
-            // 1. check 数据库是否存在该用户
-            const user = await Auth.find(auth);
-            console.log(user);
-            resolve(true);
-        } );
-    }
-    /**
-     * 创建新用户
-     * @param auth 登录信息
-     */
-    public createUser( auth: AuthModel ) {
-        return new Promise( ( resolve, reject ) => {
-            Auth.create( auth ).then( () => resolve( true ), reject );
+            log.info( JSON.stringify( authInfo, null, 2 ) );
+            // 1. 判断provider
+            const { provider } = authInfo;
+            if ( provider === 'github' ) {
+                // 1. check 数据库是否存在该用户
+                const user = await Auth.findOne( {
+                    provider,
+                    githubId: authInfo.id,
+                } );
+                if ( user ) {
+                    // 用户存在,查询用户信息返回
+                    log.info( 'user exsist' );
+                } else {
+                    // 用户不存在,执行注册逻辑
+                    const dbUser =  await this.ctx.service.user.register(authInfo);
+                    resolve(dbUser.user);
+                }
+            }
+            resolve( true );
+            if ( 1 === 1 ) {
+                reject( false );
+            }
         } );
     }
 }
-
-
-
