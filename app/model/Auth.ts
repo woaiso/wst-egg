@@ -14,15 +14,15 @@ export interface IAuthModel extends Document {
 const schema = new Schema({
     userId: {
         type: String,
-        required: true,
+        required: false,
     },
     userName: {
         type: String,
-        required: true,
+        required: false, // 第三方登录可能无登录名
     },
     password: {
         type: String,
-        required: true,
+        required: false, // 第三方登录可能无密码
     },
     provider: {
         type: String,

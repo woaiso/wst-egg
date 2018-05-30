@@ -42,7 +42,7 @@ export interface IUserModel extends Document {
 const schema = new Schema( {
     userId: {
         type: String,
-        required: true,
+        required: false,
     },
     nickName: {
         type: String,
@@ -71,6 +71,7 @@ const schema = new Schema( {
         doc.createdAt = now;
     }
     doc.modifiedAt = now;
+    doc.userId = '1';
     next();
 } );
 

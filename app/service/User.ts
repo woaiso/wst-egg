@@ -17,10 +17,13 @@ export default class UserService extends Service {
     const { provider } = userInfo;
     const dbUser = {} as IUserModel;
     const dbAuth = {} as IAuthModel;
+    // Github第三方登录
     if ( provider === 'github' ) {
       // Auth 信息设置
       dbAuth.provider = provider; // 数据提供者
       dbAuth.githubId = userInfo.id; // githubID
+      dbAuth.userName = userInfo.name; // Github登录名
+      dbAuth.password = '';
 
       // 用户信息的设置
       dbUser.nickName = userInfo.displayName; // 昵称

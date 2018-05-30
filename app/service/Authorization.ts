@@ -1,8 +1,6 @@
 import { Service } from 'egg';
 import log from '../utils/log';
 import Auth, { IAuthModel } from './../model/Auth';
-import User from './../model/User';
-import UserService from './User';
 
 export interface IAuth {
     login( auth: IAuthModel ): Promise<any>;
@@ -19,7 +17,7 @@ export default class AuthorizationService extends Service implements IAuth {
      */
     public login( authInfo ) {
         return new Promise( async ( resolve, reject ) => {
-            log.info( JSON.stringify( authInfo, null, 2 ) );
+            // log.info( JSON.stringify( authInfo, null, 2 ) );
             // 1. 判断provider
             const { provider } = authInfo;
             if ( provider === 'github' ) {
@@ -31,15 +29,14 @@ export default class AuthorizationService extends Service implements IAuth {
                 if ( user ) {
                     // 用户存在,查询用户信息返回
                     log.info( 'user exsist' );
+                    resolve(user);
                 } else {
                     // 用户不存在,执行注册逻辑
                     const dbUser =  await this.ctx.service.user.register(authInfo);
                     resolve(dbUser.user);
                 }
-            }
-            resolve( true );
-            if ( 1 === 1 ) {
-                reject( false );
+            } else {
+                reject('请求异常');
             }
         } );
     }
