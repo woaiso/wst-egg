@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import Information from '../../../app/crawl/spider/information';
 import request from '../../../app/crawl/utils/request';
 
 describe('app/crawl/utils/request.ts', () => {
@@ -21,14 +22,14 @@ describe('app/crawl/utils/request.ts', () => {
           data: JSON.stringify(requsetPayload),
         },
       );
-      assert(1 + 1 === 2);
+      assert(typeof result !== 'undefined');
     } catch (e) {
-      console.log(e.message.data);
       assert(e.message.data === '{"code":141,"error":"No users found with such a phone number"}');
     }
   });
-  it('getGroupList user not', async () => {
-    
+  it('getArticles length > 0', async () => {
+    const result  = await new Information().getArticles();
+    assert(result.data.length > 0);
   });
 
 });

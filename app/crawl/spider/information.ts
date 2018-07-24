@@ -1,3 +1,4 @@
+import logger from '../../utils/logger';
 import Spider from './spider';
 
 interface ISpider {
@@ -44,8 +45,3 @@ export default class Information extends Spider implements ISpider {
     });
   }
 }
-
-(async () => {
-  const result = await new Information().getArticles();
-  console.log(JSON.stringify(result, null, 2));
-})();
