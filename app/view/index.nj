@@ -12,6 +12,7 @@
         已登录 {{user.userName}}
         {% else %}
             未登录
+            <a href="/passport/github">登录</a>
     {% endif %}
 </body>
 </html>

@@ -1,6 +1,6 @@
 import { Service } from 'egg';
 import log from '../utils/log';
-import Auth, { IAuthModel } from './../model/Auth';
+import Auth, { IAuthModel } from '../model/Auth';
 
 export interface IAuth {
     login( auth: IAuthModel ): Promise<any>;
