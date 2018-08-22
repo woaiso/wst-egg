@@ -41,7 +41,6 @@ export default class Information extends Spider implements ISpider {
     return super.post(`http://api.meipian.me/4.4${path}`, {
       data: { ...data, ...this.options.data },
       headers: this.options.headers,
-
     });
   }
 }

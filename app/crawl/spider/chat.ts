@@ -36,11 +36,11 @@ export default class ChatSpider extends Spider {
     super();
     const defaultOptions = {
       // 通用请求参数
-      commonRequestDatas: {
+      data: {
         v: 10001,
         _ApplicationId: 'fUEmHsDqbr9v73s4JBx0CwANjDJjoMcDFlrGqgY5',
         _ClientVersion: 'js1.10.0',
-        _InstallationId: '64aa918f-b1ec-750a-0f7c-841d72037e19',
+        _InstallationId: '71879571-771f-ec3f-c997-54e2bcc2e8c2',
       },
     };
     this.options = { ...defaultOptions, ...options };
@@ -79,10 +79,10 @@ export default class ChatSpider extends Spider {
       if (result.code === 1000) {
         return Promise.resolve(result.code === 1000);
       } else {
-        return Promise.reject(false);
+        return Promise.resolve(false);
       }
     } catch (e) {
-      return Promise.reject(false);
+      return Promise.resolve(false);
     }
   }
   /**
@@ -108,9 +108,13 @@ export default class ChatSpider extends Spider {
     });
   }
   private async fetch(path: string, data?: any) {
-    return super.post(`https://mobile-elb.antich.at${path}`, {
-      ...data,
-      ...this.options.commonRequestDatas,
-    });
+    return super
+      .post(`https://mobile-elb.antich.at${path}`, {
+        data: {
+          ...data,
+          ...this.options.data,
+        },
+      })
+      .then((res) => res.data);
   }
 }
