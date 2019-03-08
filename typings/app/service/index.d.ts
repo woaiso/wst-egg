@@ -1,12 +1,13 @@
-// This file was auto created by egg-ts-helper
+// This file is created by egg-ts-helper
 // Do not modify this file!!!!!!!!!
 
-import Authorization from '../../../app/service/Authorization';
-import User from '../../../app/service/User';
+import 'egg';
+import ExportAuthorization from '../../../app/service/Authorization';
+import ExportUser from '../../../app/service/User';
 
 declare module 'egg' {
   interface IService {
-    authorization: Authorization;
-    user: User;
+    authorization: ExportAuthorization;
+    user: ExportUser;
   }
 }

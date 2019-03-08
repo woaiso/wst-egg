@@ -1,12 +1,13 @@
-// This file was auto created by egg-ts-helper
+// This file is created by egg-ts-helper
 // Do not modify this file!!!!!!!!!
 
-import Home from '../../../app/controller/home';
-import User from '../../../app/controller/user';
+import 'egg';
+import ExportHome from '../../../app/controller/home';
+import ExportUser from '../../../app/controller/user';
 
 declare module 'egg' {
   interface IController {
-    home: Home;
-    user: User;
+    home: ExportHome;
+    user: ExportUser;
   }
 }

@@ -1,5 +1,5 @@
 import { Service } from 'egg';
-import log from '../utils/log';
+import log from '../utils/logger';
 import Auth, { IAuthModel } from '../model/Auth';
 
 export interface IAuth {

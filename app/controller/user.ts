@@ -1,8 +1,16 @@
 import { Controller } from 'egg';
 
 export default class UserController extends Controller {
-  public async index() {
-    const { ctx } = this;
-    ctx.body = '<h1>/user</h1>';
+  /**
+   * 登录
+   */
+  public async login() {
+    return 'login';
+  }
+  /**
+   * 注册
+   */
+  public async register() {
+    return 'register';
   }
 }
