@@ -4,13 +4,15 @@ export default class UserController extends Controller {
   /**
    * 登录
    */
-  public async login() {
-    return 'login';
+  async login() {
+    const { ctx } = this;
+    ctx.body = 'login';
   }
   /**
    * 注册
    */
-  public async register() {
-    return 'register';
+  async register() {
+    const { ctx } = this;
+    ctx.body = 'register';
   }
 }
