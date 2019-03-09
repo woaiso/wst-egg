@@ -1,9 +1,9 @@
 import { EggPlugin } from 'egg';
 
 const plugin: EggPlugin = {
-  passport: {
+  cors: {
     enable: true,
-    package: 'egg-passport',
+    package: 'egg-cors',
   },
 };
 

@@ -31,16 +31,16 @@ export class Gender {
 }
 
 export interface IUserModel extends Document {
-    userId?: string; // 用户ID
+    uuid?: string; // 用户ID
     nickName?: string; // 用户昵称
     avatar?: string; // 头像
     gender?: Gender;  // 性别
-    createdAt: Date; // 创建时间
-    modifiedAt: Date; // 最后修改时间
+    createAt: Date; // 创建时间
+    updateAt: Date; // 最后修改时间
 }
 
 const schema = new Schema( {
-    userId: {
+    uuid: {
         type: String,
         required: false,
     },
@@ -56,24 +56,20 @@ const schema = new Schema( {
         type: Number,
         required: false,
     },
-    createdAt: {
+    createAt: {
         type: Date,
         required: false,
     },
-    modifiedAt: {
+    updateAt: {
         type: Date,
         required: false,
     },
 } ).pre( 'save', function ( next ) {
     const doc = this as IUserModel;
     const now = new Date();
-    if ( !doc.createdAt ) {
-        doc.createdAt = now;
-    }
-    doc.modifiedAt = now;
-    doc.userId = '1';
+    doc.updateAt = now;
     next();
 } );
 
 const connection = new Connection().getConnection();
-export default connection.model<IUserModel>( 'User', schema );
+export default connection.model<IUserModel>( 'user', schema );

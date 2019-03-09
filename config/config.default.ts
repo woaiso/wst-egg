@@ -1,5 +1,4 @@
 import { EggAppConfig, PowerPartial } from 'egg';
-import * as path from 'path';
 
 // for config.{env}.ts
 export type DefaultConfig = PowerPartial<EggAppConfig & BizConfig>;
@@ -20,25 +19,13 @@ export default ( appInfo: EggAppConfig ) => {
   config.keys = appInfo.name + '_1524105246005_4275';
 
   // add your config here
-  config.middleware = [];
+  config.middleware = [
+    'auth',
+  ];
 
-  // add view template
-  config.view = {
-    defaultViewEngine: 'nunjucks',
-    mapping: {
-      '.nj': 'nunjucks',
-    },
-    root: [
-      path.join( appInfo.baseDir, 'app/view' ),
-    ].join( ',' ),
-  };
-
-  // add oauth
-  config.passportGithub = {
-    key: 'fcb96d56ff06bb5d60ca',
-    secret: 'a69f15cdd71fc3defc8144d4a52c223b31c13be5',
-    callbackURL: '/passport/github/callback',
-    proxy: true,
+  config.bodyParser = {
+    enable: true,
+    jsonLimit: '10mb',
   };
 
   config.mongo = {
@@ -51,5 +38,24 @@ export default ( appInfo: EggAppConfig ) => {
       },
     },
   };
+
+  config.security =  {
+    csrf: {
+      enable: false,
+      ignore: () => true,
+    },
+  };
+
+  config.jwt = {
+    jwtSecret: 'woaiso-local-secret',
+    jwtExpire: '14 days',
+    WhiteList: ['UserLogin'],
+  };
+
+  config.cors = {
+    origin: '*',
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
+  };
+
   return config;
 };

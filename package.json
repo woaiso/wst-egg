@@ -23,10 +23,12 @@
   "dependencies": {
     "axios": "^0.18.0",
     "egg": "^2.6.1",
+    "egg-cors": "^2.1.2",
     "egg-logger": "^1.7.1",
-    "egg-passport": "^2.0.1",
     "egg-scripts": "^2.6.0",
-    "mongoose": "^5.0.15"
+    "jsonwebtoken": "^8.5.0",
+    "mongoose": "^5.0.15",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.40",

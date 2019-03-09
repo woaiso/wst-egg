@@ -1,38 +1,71 @@
+import Account, { IAccountModel } from '../model/Account';
+
 import { Service } from 'egg';
-import Auth, { IAuthModel } from '../model/Auth';
-import User, { Gender, IUserModel } from '../model/User';
+import User from '../model/User';
+
+const uuidv4 = require('uuid/v4');
 
 /**
  * user Service
  * 用户相关服务
  */
 export default class UserService extends Service {
+  /**
+   * 使用账号密码创建账户
+   * @param userName 账户名
+   * @param password 密码
+   */
+  async createAccountByUsernamePassword(userName, password) {
+    // 1. 检查用户名和密码是否合法
+    // 2. 检查用户名是否存在
+    if (await this.checkUserNameExists(userName)) {
+      throw new Error(`账号已存在：${userName}`);
+    }
+    const user = {
+      uuid: uuidv4(),
+      userName,
+      password,
+      createAt: new Date().toLocaleString(),
+      updateAt: new Date().toLocaleString(),
+    };
+    this.ctx.logger.info(`创建账户: ${userName}`);
+    return Account.create(user);
+  }
 
   /**
-   * 用户注册
-   * @param userInfo 用户信息
+   * 检查用户名是否存在
+   * @param userName 用户名
    */
-  public async register( userInfo: any ) {
-    // 1. 判断用户来源
-    const { provider } = userInfo;
-    const dbUser = {} as IUserModel;
-    const dbAuth = {} as IAuthModel;
-    // Github第三方登录
-    if ( provider === 'github' ) {
-      // Auth 信息设置
-      dbAuth.provider = provider; // 数据提供者
-      dbAuth.githubId = userInfo.id; // githubID
-      dbAuth.userName = userInfo.name; // Github登录名
-      dbAuth.password = '';
+  async checkUserNameExists(userName) {
+    return Account.findOne({ userName: { $eq: userName } });
+  }
 
-      // 用户信息的设置
-      dbUser.nickName = userInfo.displayName; // 昵称
-      dbUser.avatar = userInfo.photo; // 头像
-      dbUser.gender = Gender.UNKNOWN; // 性别未知
+  /**
+   * 创建用户信息
+   * @param userInfo 用户信息
+   * @param account 账户信息
+   */
+  async createUserInfo(userInfo, account: IAccountModel) {
+    if (account) {
+      const user = {
+        uuid: account.uuid,
+        nickName: userInfo.nickName || `用户 ${new Date().getTime()}`,
+        avatar: userInfo.userInfo || '',
+        gender: userInfo.gender || 0,
+        createAt: new Date().toLocaleString(),
+        updateAt: new Date().toLocaleString(),
+      };
+      this.ctx.logger.info(`创建用户信息: ${account.userName}`);
+      return User.create(user);
+    } else {
+      throw new Error('无关联的账户信息');
     }
-    // 1. 向用户表写入一条数据
-    const user = await User.create( dbUser );
-    const auth = await Auth.create( dbAuth );
-    return { user, auth };
+  }
+
+  // 1. 用户登录
+  async findByUsernamePassword(userName, password) {
+    // 对传入的password进行加密
+    const user = Account.findOne({ userName: {$eq: userName}, password: {$eq: password} });
+    return user;
   }
 }
