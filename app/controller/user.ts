@@ -8,12 +8,12 @@ export default class UserController extends Controller {
    */
   async login() {
     const { ctx } = this;
-    const { username, password } = ctx.request.body;
+    const { mail: username, password, type } = ctx.request.body;
     if (!username) {
-      return (ctx.body = new ResponseJSON(400, '请输入正确的用户名'));
+      return (ctx.body = new ResponseJSON(400, '请输入正确的用户名', { type }));
     }
     if (!password) {
-      return (ctx.body = new ResponseJSON(400, '请输入正确的密码'));
+      return (ctx.body = new ResponseJSON(400, '请输入正确的密码', { type }));
     }
     try {
       const account = await ctx.service.user.findByUsernamePassword(
@@ -22,20 +22,26 @@ export default class UserController extends Controller {
       );
       if (account) {
         // 登录成功 // 开始生成token
-        const data = {token: jwt.sign({ uuid: account.uuid }, this.config.jwt.jwtSecret, {
-          expiresIn: this.config.jwt.jwtExpire,
-        })};
-        return (ctx.body = new ResponseJSON(0, '登录成功', data));
+        const token = jwt.sign(
+          { uuid: account.uuid },
+          this.config.jwt.jwtSecret,
+          {
+            expiresIn: this.config.jwt.jwtExpire,
+          }
+        );
+        ctx.set('authorization', token);
+        return (ctx.body = new ResponseJSON(0, '登录成功!', { type, token }));
       } else {
         // 登录失败
         return (ctx.body = new ResponseJSON(
           403,
-          '登录失败！请输入正确的账号密码'
+          '登录失败！请输入正确的账号密码',
+          {type}
         ));
       }
     } catch (e) {
       ctx.logger.error('登录失败！');
-      return (ctx.body = new ResponseJSON(403, '登录失败!'));
+      return (ctx.body = new ResponseJSON(403, '登录失败!', { type }));
     }
   }
   /**
@@ -44,14 +50,13 @@ export default class UserController extends Controller {
   async register() {
     const { ctx } = this;
     const {
-      username,
+      mail: username,
       password,
       invitation_code,
       nickname,
       avatar,
       gender,
     } = ctx.request.body;
-
     // 验证所有的信息是否符合规则
     if (!username) {
       return (ctx.body = new ResponseJSON(400, '请输入正确的用户名'));
@@ -66,7 +71,7 @@ export default class UserController extends Controller {
     if (invitation_code !== '888') {
       ctx.body = {
         code: 101,
-        msg: '请输入正确的邀请码',
+        message: '请输入正确的邀请码',
       };
     } else {
       // todo
@@ -92,7 +97,7 @@ export default class UserController extends Controller {
             // 用户信息写入失败
             ctx.logger.error(`用户信息写入失败！${account.userName}`);
           }
-          ctx.body = { code: 200, message: '注册成功' };
+          ctx.body = { code: 0, message: '注册成功' };
         } else {
           ctx.body = { code: 401, message: '注册失败！请重新操作' };
         }
