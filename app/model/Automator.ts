@@ -3,21 +3,46 @@ import { Application } from 'egg';
 export default (app: Application) => {
   const mongoose = app.mongoose;
   const userSchema = new mongoose.Schema({
-    uuid: {
-      type: String,
-      required: false,
+    id: {
+        type: Number
     },
-    nickName: {
+    name: {
       type: String,
-      required: false,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
     },
     avatar: {
       type: String,
-      required: false,
     },
-    gender: {
+    status: {
       type: Number,
-      required: false,
+      required: true,
+    },
+    copyright: {
+      type: String,
+      default: 'woaiso Inc.',
+    },
+    version: {
+      type: String,
+      default: '1.0.0',
+    },
+    site: {
+      type: [String],
+    },
+    start: {
+      type: Date,
+    },
+    end: {
+      type: Date,
+    },
+    remark: {
+      type: String,
     },
     createAt: {
       type: Date,
@@ -35,11 +60,11 @@ export default (app: Application) => {
   // tslint:disable-next-line:only-arrow-functions
   userSchema.pre('save', function(next) {
     const now = new Date();
-    if ( !(this as any).createAt ) {
-        (this as any).createAt = now;
+    if (!(this as any).createAt) {
+      (this as any).createAt = now;
     }
     (this as any).updateAt = now;
     next();
-  })
-  return mongoose.model('user', userSchema);
+  });
+  return mongoose.model('automator', userSchema);
 };

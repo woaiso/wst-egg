@@ -2,11 +2,13 @@
 // Do not modify this file!!!!!!!!!
 
 import 'egg';
+import ExportAutomator from '../../../app/service/Automator';
 import ExportDribbble from '../../../app/service/Dribbble';
 import ExportUser from '../../../app/service/User';
 
 declare module 'egg' {
   interface IService {
+    automator: ExportAutomator;
     dribbble: ExportDribbble;
     user: ExportUser;
   }

@@ -1,8 +1,5 @@
-import Account, { IAccountModel } from '../model/Account';
 
 import { Service } from 'egg';
-import User from '../model/User';
-
 const uuidv4 = require('uuid/v4');
 
 /**
@@ -29,7 +26,7 @@ export default class UserService extends Service {
       updateAt: new Date().toLocaleString(),
     };
     this.ctx.logger.info(`创建账户: ${userName}`);
-    return Account.create(user);
+    return this.ctx.model.Account.create(user);
   }
 
   /**
@@ -37,7 +34,7 @@ export default class UserService extends Service {
    * @param userName 用户名
    */
   async checkUserNameExists(userName) {
-    return Account.findOne({ userName: { $eq: userName } });
+    return this.ctx.model.Account.findOne({ userName: { $eq: userName } });
   }
 
   /**
@@ -45,18 +42,16 @@ export default class UserService extends Service {
    * @param userInfo 用户信息
    * @param account 账户信息
    */
-  async createUserInfo(userInfo, account: IAccountModel) {
+  async createUserInfo(userInfo, account) {
     if (account) {
       const user = {
         uuid: account.uuid,
         nickName: userInfo.nickName || `用户 ${new Date().getTime()}`,
         avatar: userInfo.userInfo || '',
         gender: userInfo.gender || 0,
-        createAt: new Date().toLocaleString(),
-        updateAt: new Date().toLocaleString(),
       };
       this.ctx.logger.info(`创建用户信息: ${account.userName}`);
-      return User.create(user);
+      return this.ctx.model.User.create(user);
     } else {
       throw new Error('无关联的账户信息');
     }
@@ -65,7 +60,7 @@ export default class UserService extends Service {
   // 1. 用户登录
   async findByUsernamePassword(userName, password) {
     // 对传入的password进行加密
-    const user = Account.findOne({ userName: {$eq: userName}, password: {$eq: password} });
+    const user = this.ctx.model.Account.findOne({ userName: {$eq: userName}, password: {$eq: password} });
     return user;
   }
 }

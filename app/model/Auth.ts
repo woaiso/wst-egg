@@ -27,10 +27,23 @@ export default (app: Application) => {
       type: Date,
       required: false,
     },
-    modifiedAt: {
+    updateAt: {
       type: Date,
       required: false,
     },
   });
+  // tslint:disable-next-line:only-arrow-functions
+  userSchema.pre('update', function() {
+    this.update({}, { $set: { updatedAt: new Date() } });
+  });
+  // tslint:disable-next-line:only-arrow-functions
+  userSchema.pre('save', function(next) {
+    const now = new Date();
+    if ( !(this as any).createdAt ) {
+        (this as any).createdAt = now;
+    }
+    (this as any).updateAt = now;
+    next();
+  })
   return mongoose.model('auth', userSchema);
 };
