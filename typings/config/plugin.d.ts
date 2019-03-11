@@ -3,3 +3,4 @@
 
 import 'egg';
 import 'egg-cors';
+import 'egg-mongoose';

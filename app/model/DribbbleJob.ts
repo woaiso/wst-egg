@@ -3,21 +3,21 @@ import { Application } from 'egg';
 export default (app: Application) => {
   const mongoose = app.mongoose;
   const userSchema = new mongoose.Schema({
+    id: { // 自增ID
+        type: Number,
+        required: false,
+    },
     uuid: {
         type: String,
         required: false,
     },
-    nickName: {
+    userName: {
         type: String,
-        required: false,
+        required: false, // 第三方登录可能无登录名
     },
-    avatar: {
+    password: {
         type: String,
-        required: false,
-    },
-    gender: {
-        type: Number,
-        required: false,
+        required: false, // 第三方登录可能无密码
     },
     createAt: {
         type: Date,
@@ -28,5 +28,5 @@ export default (app: Application) => {
         required: false,
     },
 });
-  return mongoose.model('user', userSchema);
+  return mongoose.model('dribbble_job', userSchema);
 };

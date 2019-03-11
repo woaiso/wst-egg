@@ -1,6 +1,7 @@
+import * as jwt from 'jsonwebtoken';
+
 import { Controller } from 'egg';
 import ResponseJSON from '../utils/ResponseJSON';
-const jwt = require('jsonwebtoken');
 
 export default class UserController extends Controller {
   /**
@@ -30,13 +31,17 @@ export default class UserController extends Controller {
           }
         );
         ctx.set('authorization', token);
-        return (ctx.body = new ResponseJSON(0, '登录成功!', { type, token }));
+        return (ctx.body = new ResponseJSON(0, '登录成功!', {
+          type,
+          token,
+          authority: ['admin'],
+        }));
       } else {
         // 登录失败
         return (ctx.body = new ResponseJSON(
           403,
           '登录失败！请输入正确的账号密码',
-          {type}
+          { type }
         ));
       }
     } catch (e) {
@@ -111,8 +116,30 @@ export default class UserController extends Controller {
   async center() {
     const { ctx } = this;
     ctx.body = {
-      nickname: 'Jack Ma',
-      avatar: 'http://img.wscdn.com/928dkdf8s.png',
+      name: 'SuperK',
+      avatar: 'https://images-cdn.shimo.im/d1MvrSV3u2UOXqgw/601504753662_.pic.jpg!avatar',
+      userid: '00000001',
+      email: 'antdesign@alipay.com',
+      signature: '海纳百川，有容乃大',
+      title: '交互专家',
+      group: '蚂蚁金服－某某某事业群－某某平台部－某某技术部－UED',
+      tags: [
+        { key: '0', label: '很有想法的' },
+        { key: '1', label: '专注设计' },
+        { key: '2', label: '辣~' },
+        { key: '3', label: '大长腿' },
+        { key: '4', label: '川妹子' },
+        { key: '5', label: '海纳百川' },
+      ],
+      notifyCount: 12,
+      unreadCount: 11,
+      country: 'China',
+      geographic: {
+        province: { label: '浙江省', key: '330000' },
+        city: { label: '杭州市', key: '330100' },
+      },
+      address: '西湖区工专路 77 号',
+      phone: '0752-268888888',
     };
   }
 }
