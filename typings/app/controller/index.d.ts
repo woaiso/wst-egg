@@ -6,6 +6,7 @@ import ExportAuth from '../../../app/controller/auth';
 import ExportAutomator from '../../../app/controller/automator';
 import ExportDribbble from '../../../app/controller/dribbble';
 import ExportDribbbleAccount from '../../../app/controller/dribbble_account';
+import ExportDribbbleJob from '../../../app/controller/dribbble_job';
 import ExportJobMock from '../../../app/controller/job_mock';
 import ExportUser from '../../../app/controller/user';
 
@@ -15,6 +16,7 @@ declare module 'egg' {
     automator: ExportAutomator;
     dribbble: ExportDribbble;
     dribbbleAccount: ExportDribbbleAccount;
+    dribbbleJob: ExportDribbbleJob;
     jobMock: ExportJobMock;
     user: ExportUser;
   }

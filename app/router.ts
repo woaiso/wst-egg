@@ -6,9 +6,6 @@ export default (app: Application) => {
   router.post('/user/login', controller.user.login);
   router.post('/user/register', controller.user.register);
   router.get('/auth_routes', controller.auth.authRoutes);
-
+  router.resources('dribbble_account', '/dribbble_account', controller.dribbbleAccount);
   router.resources('automator', '/automator', controller.automator);
-  router.resources('dribbble_account', '/automator/dribbble_account', controller.dribbbleAccount);
-
-  router.get('/automator/dribbble_account', controller.dribbble.fetchAccount);
 };
