@@ -1,7 +1,5 @@
 import { Application } from 'egg';
-
 export default (app: Application) => {
-  const { model } = app;
   const mongoose = app.mongoose;
   const userSchema = new mongoose.Schema({
     id: {
@@ -66,6 +64,18 @@ export default (app: Application) => {
     thumb: {
       type: String,
     },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    saves: {
+      type: Number,
+      default: 0,
+    },
     // 创建时间
     createAt: {
       type: Date,
@@ -83,12 +93,6 @@ export default (app: Application) => {
   });
   // tslint:disable-next-line:only-arrow-functions
   userSchema.pre('save', async function(next) {
-    // 这里来实现一个自动增长ID的逻辑
-    const ret = await model.Counter.findOneAndUpdate(
-      { _id: 'dribbble_job' },
-      { $inc: { seq: 1 } },
-    );
-    (this as any).id = ret.seq;
     const now = new Date();
     if (!(this as any).createAt) {
       (this as any).createAt = now;
