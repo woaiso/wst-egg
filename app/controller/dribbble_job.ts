@@ -7,17 +7,32 @@ export default class DribbbleJobController extends Controller {
   async create() {
     const { ctx } = this;
     const postParams = ctx.request.body;
+    // 对参数做一些处理
+
+    const {
+      time_range: timeRange,
+      like_enable: likeEnable,
+      fllow_enable: fllowEnable,
+      proxy_enable: proxyEnable,
+      source,
+    } = postParams;
     const dribbbleService = ctx.service.dribbble;
     try {
       if (!(await dribbbleService.findJobBySource(postParams.source))) {
-        const result = await dribbbleService.createJob(postParams);
+        const result = await dribbbleService.createJob({
+          source,
+          timeRange,
+          likeEnable,
+          fllowEnable,
+          proxyEnable,
+        });
         if (result) {
-          ctx.body = new ResponseJSON(0, '创建成功', { data: result });
+          ctx.body = new ResponseJSON(1001, '创建成功', { data: result });
         } else {
-          ctx.body = new ResponseJSON(0, '创建失败');
+          ctx.body = new ResponseJSON(1001, '创建失败');
         }
       } else {
-        ctx.body = new ResponseJSON(0, `创建失败,${postParams.source} 已存在`);
+        ctx.body = new ResponseJSON(1001, `创建失败,${postParams.source} 已存在`);
       }
     } catch (e) {
       ctx.logger.error(e);
@@ -27,7 +42,7 @@ export default class DribbbleJobController extends Controller {
 
   async index() {
     const { ctx } = this;
-    const data = await ctx.model.DribbbleJob.find();
+    const data = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
     ctx.body = new ResponseJSON(0, 'success', {
       data: {
         inProcessing: 100,
