@@ -3,11 +3,12 @@ import { Application } from 'egg';
 export default (app: Application) => {
   const mongoose = app.mongoose;
   const userSchema = new mongoose.Schema({
+    id: { type: Number, required: true, unique: true },
     account: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    username: { type: String},
-    nickname: { type: String },
-    status: { type: Number, default: 1 },
+    username: { type: String, default: 'not initialize'},
+    nickname: { type: String, default: 'not initialize' },
+    status: { type: Number, default: 0 },
     lastSignInAt: { type: Date },
     createAt: {
       type: Date,
