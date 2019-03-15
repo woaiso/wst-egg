@@ -56,4 +56,18 @@ export default class DribbbleAccountController extends Controller {
       },
     });
   }
+
+  async getUserInfo() {
+    const { ctx } = this;
+    const { account, password } = ctx.request.query;
+    try {
+      ctx.body = await ctx.service.dribbble.getUserInfoByAccountAndPassword(
+        account,
+        password
+      );
+    } catch (e) {
+      this.ctx.logger.error(e);
+      ctx.body = new ResponseJSON(1001, e.message);
+    }
+  }
 }

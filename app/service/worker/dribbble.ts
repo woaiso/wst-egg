@@ -1,7 +1,40 @@
 import * as $ from 'cheerio';
+import * as cookie from 'cookie';
 
 import { Service } from 'egg';
 import request from './../../utils/request';
+
+const DRIBBBLE_SESSION_KEY = '_dribbble_session';
+
+const getCookie = (name, cookies: [string]) => {
+  if (cookies && cookies.length > 0) {
+    for (const cookieStr of cookies) {
+      const ck = cookie.parse(cookieStr);
+      if (ck[name]) {
+        return ck[name];
+      }
+    }
+  } else {
+    return null;
+  }
+};
+
+const createCookieStrForReques = (cookies: [string]) => {
+  let cookieStr = '';
+  if (cookies && cookies.length > 0) {
+    for (const cookieItemStr of cookies) {
+      const ck = cookie.parse(cookieItemStr);
+      for (const c in ck) {
+        if (!['path', 'expires'].includes(c)) {
+          cookieStr += c + '=' + ck[c] + ';';
+        }
+      }
+    }
+    return cookieStr;
+  } else {
+    return null;
+  }
+};
 
 export default class WorkerDribbble extends Service {
   getShotId(url) {
@@ -12,58 +45,65 @@ export default class WorkerDribbble extends Service {
   /**
    * 登录
    * @param {User} user 登录用户信息
-   * {name: string, password: string, token: string}
+   * {account: string, password: string, token: string}
    */
   async login(user) {
     const url = 'https://dribbble.com/session';
-    return new Promise((resolve, reject) => {
-      request({
-        url,
-        method: 'POST',
-        data: {
-          utf8: '✓',
-          authenticity_token: user.token,
-          login: user.name,
-          password: user.password,
-        },
-      }).then(res => {
-        const html = res.data;
-        const dom = $(html);
-        const nickName = dom.find('.profile-name').text();
-        if (nickName && nickName !== '') {
-          const userName = dom
-            .find('#t-profile .has-sub')
-            .attr('href')
-            .replace(/^\//, '');
-          resolve({ userName, nickName });
-        } else {
-          reject('账号密码错误');
-        }
-      }, reject);
+    const res = await request({
+      url,
+      method: 'POST',
+      data: {
+        utf8: '✓',
+        authenticity_token: user.token,
+        login: user.account,
+        password: user.password,
+      },
+      headers: {
+        cookie: user.session,
+      },
     });
+    const { status, headers } = res;
+    if (status === 302 && headers.location === 'https://dribbble.com/') {
+      this.ctx.logger.info(`dribbble login success: ${user.account}`);
+      // 表明登录成功
+      return headers['set-cookie'];
+    } else {
+      this.ctx.logger.warn(`dribbble login fail: ${user.account}`);
+      return null;
+    }
   }
 
   /**
-   * 登录必须使用authtoken
+   * 登录必须使用authtoken, dribbble_session
    * @returns
    * @memberof WorkerDribbble
    */
-  async getAuthToken() {
+  async getAuthTokenAndSession() {
     const url = 'https://dribbble.com/session/new';
     try {
       const ret = await request({ url });
       if (ret) {
+        const session = `${DRIBBBLE_SESSION_KEY}=${getCookie(
+          DRIBBBLE_SESSION_KEY,
+          ret.headers['set-cookie']
+        )}`;
         const html = ret.data;
         const token = $(html)
           .find('[name="authenticity_token"]')
           .val();
         if (token) {
-          return token;
+          return {
+            session,
+            token,
+          };
         } else {
           throw new Error('未获取到 authenticity_token');
         }
       } else {
-        return null;
+        return {
+          session: null,
+          token: null,
+        };
       }
     } catch (e) {
       throw new Error(e);
@@ -166,24 +206,54 @@ export default class WorkerDribbble extends Service {
     });
   }
   /**
-   * 登录并获取用户信息
-   * @param {User} passport 登录通行证 {name:string, password:string}
+   * 获取登录凭证，首先查询是否存在可使用的凭证，不存在则登录获取，并存储到数据库
+   *
+   * @memberof WorkerDribbble
    */
-  async getUserInfo(passport): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      const token = await this.getAuthToken();
-      passport = { ...passport, token };
-      try {
-        const userInfo = await this.login(passport);
-        if (userInfo) {
-          resolve(userInfo);
-        } else {
-          reject(new Error('未获取到正确的用户信息'));
+  async getLoginCredentials(passport) {
+    const { DribbbleAccount } = this.ctx.model;
+    // 1. 查询当前账户下是否有可用的凭证
+    const { credentials } = await DribbbleAccount.findOne({
+      account: { $eq: passport.account },
+    }).select('credentials');
+    if (!credentials || credentials.length === 0) {
+      // 需要走登录流程
+      const { token, session } = await this.getAuthTokenAndSession();
+      this.ctx.logger.info(`login token：${token}`);
+      this.ctx.logger.info(`login session：${session}`);
+      passport = { ...passport, token, session };
+      const credentialsArray = await this.login(passport);
+      // 将凭证存入数据库
+      return DribbbleAccount.findOneAndUpdate(
+        { account: { $eq: passport.account } },
+        {
+          credentials: credentialsArray,
         }
-      } catch (e) {
-        reject(e);
-      }
+      );
+    } else {
+      return credentials;
+    }
+  }
+  /**
+   * 获取用户信息
+   * @param {User} passport 登录通行证 {account:string, password:string}
+   */
+  async getUserInfo(passport) {
+    const credentials = await this.getLoginCredentials(passport);
+    // 通过拉取登录后的首页数据获得个人信息
+    const url = 'https://dribbble.com/';
+    const res = await request({
+      url,
+      headers: {
+        cookie: createCookieStrForReques(credentials),
+      },
     });
+    const html = res.data;
+    const dom = $(html);
+    const nickname = dom.find('span.profile-name').text().trim();
+    const avatar = dom.find('#t-profile>a>img').attr('src');
+    const username = dom.find('#t-profile>a').attr('href').replace(/\//g, '');
+    return { nickname, avatar, username } as any;
   }
 
   /**

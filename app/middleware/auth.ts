@@ -29,7 +29,6 @@ export default () => {
         }
         await next();
       } catch (err) {
-        console.log(err);
         ctx.body = { code: 401, message: '访问令牌鉴权无效，请重新登录获取！' };
         ctx.status = 401;
       }

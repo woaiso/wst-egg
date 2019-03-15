@@ -54,6 +54,13 @@ export default class DribbbleService extends Service {
       account: { $eq: account },
     }).exists(account, false);
   }
+  /**
+   * 创建一个任务组
+   *
+   * @param {*} job 任务目标信息，额外信息会通过网络获取
+   * @returns
+   * @memberof DribbbleService
+   */
   async createJob(job) {
     const dribbbleWorker = this.ctx.service.worker.dribbble;
     try {
@@ -68,5 +75,16 @@ export default class DribbbleService extends Service {
 
   async findJobBySource(source) {
     return this.ctx.model.DribbbleJob.findOne({ source: { $eq: source } });
+  }
+
+  /**
+   * 获取用户信息
+   *
+   * @param {*} account 登录账户名
+   * @param {*} password 登录密码
+   * @memberof DribbbleService
+   */
+  async getUserInfoByAccountAndPassword(account, password) {
+    return this.ctx.service.worker.dribbble.getUserInfo({ account, password });
   }
 }

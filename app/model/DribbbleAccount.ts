@@ -6,7 +6,7 @@ export default (app: Application) => {
     id: { type: Number, required: true, unique: true },
     account: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    username: { type: String, default: 'not initialize'},
+    username: { type: String, default: 'not initialize' },
     nickname: { type: String, default: 'not initialize' },
     status: { type: Number, default: 0 },
     lastSignInAt: { type: Date },
@@ -17,6 +17,9 @@ export default (app: Application) => {
     updateAt: {
       type: Date,
       required: false,
+    },
+    credentials: {
+      type: Array,
     },
   });
   // tslint:disable-next-line:only-arrow-functions

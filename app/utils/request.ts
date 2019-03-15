@@ -12,7 +12,7 @@ export default async function request(options): Promise<any> {
         return (status >= 200 && status < 300) || status === 302; // default
       },
       headers: {
-        "referer": options.url,
+        referer: options.url,
         'X-Forwarded-For': '121.168.0.' + Math.ceil(Math.random() * 200) + 10,
         'user-agent': userAgent,
       },
@@ -20,11 +20,11 @@ export default async function request(options): Promise<any> {
     const newOptions = { ...defaultOptions, ...options };
     axios.request(newOptions).then(
       res => {
-        if (res.status === 302) {
-          request({ url: res.headers.location }).then(resolve, reject);
-        } else {
-          resolve(res);
-        }
+        // if (res.status === 302) {
+        // request({ url: res.headers.location }).then(resolve, reject);
+        // } else {
+        resolve(res);
+        // }
       },
       err => reject(err)
     );
