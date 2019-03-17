@@ -19,11 +19,18 @@ export default class DribbbleAccountController extends Controller {
       } else {
         try {
           const result = await ctx.service.dribbble.createAccounnt(postParams);
+          // 接下来去尝试登录初始化用户的账户信息，
+          // 仅会初始化不存在的账号，已存在的账号将不被初始化
+          // 如果仅添加了一个账号，则等待账户信息初始化完成后再响应前端
+          ctx.service.dribbble.fillAccountInfo(postParams);
+          // 大于1直接返回添加结果，在后台慢慢初始化信息
           ctx.body = new ResponseJSON(
             0,
             `操作完成，共写入${result.success.length}条数据，写入错误${
               result.error.length
-            }条，已存在${result.exists.length}条`,
+            }条，已存在${
+              result.exists.length
+            }条。用户信息正在后台确认并初始化，请稍后查询`,
             { data: result }
           );
         } catch (e) {
@@ -39,19 +46,23 @@ export default class DribbbleAccountController extends Controller {
   async index() {
     const { ctx } = this;
     const {
-      page_size: pageSize = 10,
-      current_page: currentPage = 1,
+      pageSize = 10,
+      current = 1,
     } = ctx.request.query;
     const list = await ctx.model.DribbbleAccount.find()
       .limit(+pageSize)
-      .skip((+currentPage - 1) * +pageSize)
+      .skip((+current - 1) * +pageSize)
       .sort({
         id: 'asc',
       });
+    const total = await ctx.model.DribbbleAccount.find().count();
     ctx.body = new ResponseJSON(0, 'success', {
       data: {
-        page_size: pageSize,
-        current_page: currentPage,
+        pagination: {
+          current,
+          total,
+          pageSize
+        },
         list,
       },
     });

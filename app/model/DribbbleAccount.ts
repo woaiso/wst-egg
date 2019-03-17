@@ -8,6 +8,7 @@ export default (app: Application) => {
     password: { type: String, required: true },
     username: { type: String, default: 'not initialize' },
     nickname: { type: String, default: 'not initialize' },
+    avatar: {type: String, default: 'default'},
     status: { type: Number, default: 0 },
     lastSignInAt: { type: Date },
     createAt: {

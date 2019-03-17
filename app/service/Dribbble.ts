@@ -22,23 +22,46 @@ export default class DribbbleService extends Service {
         try {
           const result = await this.ctx.model.DribbbleAccount.create(account);
           if (result) {
-            successQueue.push(account.account);
+            successQueue.push(account);
           } else {
-            errorQueue.push(account.account);
+            errorQueue.push(account);
           }
         } catch (e) {
           this.ctx.logger.error(e.message);
-          errorQueue.push(account.account);
+          errorQueue.push(account);
         }
       } else {
         this.ctx.logger.info(`dribbble_account exists：${account.account}`);
-        existsQueue.push(account.account);
+        existsQueue.push(account);
       }
     }
     return {
       success: successQueue,
       error: errorQueue,
       exists: existsQueue,
+    };
+  }
+  /**
+   * 填充账户信息，支持批量操作
+   * @param {Account[]} accounts 账户信息
+   * @memberof DribbbleService
+   */
+  async fillAccountInfo(accounts) {
+    const successQueue = [] as any[];
+    const errorQueue = [] as any[];
+    for (const account of accounts) {
+      const result = await this.ctx.service.worker.dribbble.getUserInfo(
+        account
+      );
+      if (result) {
+        successQueue.push(result);
+      } else {
+        errorQueue.push(account);
+      }
+    }
+    return {
+      success: successQueue,
+      error: errorQueue,
     };
   }
 

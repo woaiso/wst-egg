@@ -223,13 +223,18 @@ export default class WorkerDribbble extends Service {
       this.ctx.logger.info(`login session：${session}`);
       passport = { ...passport, token, session };
       const credentialsArray = await this.login(passport);
-      // 将凭证存入数据库
-      return DribbbleAccount.findOneAndUpdate(
-        { account: { $eq: passport.account } },
-        {
-          credentials: credentialsArray,
-        }
-      );
+      if (credentialsArray && credentialsArray.length > 0) {
+        // 将凭证存入数据库
+        await DribbbleAccount.findOneAndUpdate(
+          { account: { $eq: passport.account } },
+          {
+            credentials: credentialsArray,
+          },
+        );
+        return credentialsArray;
+      } else {
+        return null;
+      }
     } else {
       return credentials;
     }
@@ -240,6 +245,9 @@ export default class WorkerDribbble extends Service {
    */
   async getUserInfo(passport) {
     const credentials = await this.getLoginCredentials(passport);
+    if (!credentials) {
+      return null;
+    }
     // 通过拉取登录后的首页数据获得个人信息
     const url = 'https://dribbble.com/';
     const res = await request({
@@ -250,10 +258,41 @@ export default class WorkerDribbble extends Service {
     });
     const html = res.data;
     const dom = $(html);
-    const nickname = dom.find('span.profile-name').text().trim();
+    const nickname = dom
+      .find('span.profile-name')
+      .text()
+      .trim();
     const avatar = dom.find('#t-profile>a>img').attr('src');
-    const username = dom.find('#t-profile>a').attr('href').replace(/\//g, '');
-    return { nickname, avatar, username } as any;
+    const username = dom.find('#t-profile>a').attr('href')
+    .replace(/\//g, '');
+    // 获取用户的一些详细信息
+    let user = { nickname, avatar, username } as any;
+    try {
+      const match = html.match(
+        /Dribbble\.Segment\.identify\((\d+),\s+([^}]+})/
+      );
+      if (match && match.length > 2) {
+        user.dribbble_uid = match[1];
+        user = { ...user, ...JSON.parse(match[2]) };
+      }
+      this.ctx.logger.info(user);
+      // 此处将用户信息重新设置并更新
+      user = await this.ctx.model.DribbbleAccount.updateOne(
+        {
+          account: { $eq: passport.account },
+        },
+        {
+          lastSignInAt: new Date(),
+          status: 1,
+          username,
+          nickname,
+          avatar,
+        }
+      );
+    } catch (e) {
+      this.ctx.logger.error(e);
+    }
+    return user;
   }
 
   /**
