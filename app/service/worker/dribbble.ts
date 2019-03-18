@@ -48,6 +48,7 @@ export default class WorkerDribbble extends Service {
    * {account: string, password: string, token: string}
    */
   async login(user) {
+    console.log('user', user);
     const url = 'https://dribbble.com/session';
     const res = await request({
       url,
@@ -113,10 +114,13 @@ export default class WorkerDribbble extends Service {
    * 获取作品的详细信息
    * @param {string} shotUrl 作品URL
    */
-  async getShotInfo(shotUrl): Promise<any> {
+  async getShotInfo(shotUrl, credentials): Promise<any> {
     return new Promise((resolve, reject) => {
       request({
         url: shotUrl,
+        headers: {
+          cookie: createCookieStrForReques(credentials),
+        },
       }).then(res => {
         const html = res.data;
         const dom = $(html);
@@ -176,18 +180,23 @@ export default class WorkerDribbble extends Service {
    */
   async like(account, job) {
     const { source } = job;
-    const { username, credentials } = account;
+    let { credentials } = account;
+    const { username } = account;
     const regex = /dribbble\.com\/shots\/([\s\S]+)\??/.exec(source);
     const shotId = regex && regex.length > 0 ? regex[1] : null;
     if (!shotId) {
       throw new Error('请检查任务');
     }
     const likeUrl = `https://dribbble.com/${username}/likes?screenshot_id=${shotId}`;
-
+    if (!credentials || credentials.length === 0) {
+      credentials = await this.getLoginCredentials(account);
+    }
     // 先浏览页面获取到csrfToken
-    const shotInfo = await this.getShotInfo(source);
+    const shotInfo = await this.getShotInfo(source, credentials);
 
-    this.ctx.logger.info('获取Shot信息', shotInfo);
+    this.ctx.logger.info('获取Shot信息', JSON.stringify(shotInfo));
+
+    this.ctx.logger.info('获取登录信息', JSON.stringify(credentials));
 
     const headers = {
       accept: '*/*',
@@ -204,14 +213,12 @@ export default class WorkerDribbble extends Service {
     try {
       const ret = await request({ url: likeUrl, method: 'POST', headers });
       const html = ret.data;
-      const num = $(html)
-        .find('.stats-num')
-        .children()
-        .remove()
-        .end()
-        .text()
-        .trim();
-
+      const rex = html.match(/likes_count:\s(\d+)/);
+      let num = 0;
+      if (rex && rex.length > 1) {
+        num = rex[1];
+      }
+      this.ctx.logger.info('点赞完成', num);
       return num;
     } catch (e) {
       this.ctx.logger.error(e);
@@ -233,7 +240,8 @@ export default class WorkerDribbble extends Service {
       const { token, session } = await this.getAuthTokenAndSession();
       this.ctx.logger.info(`login token：${token}`);
       this.ctx.logger.info(`login session：${session}`);
-      passport = { ...passport, token, session };
+      passport.token = token;
+      passport.session = session;
       const credentialsArray = await this.login(passport);
       if (credentialsArray && credentialsArray.length > 0) {
         // 将凭证存入数据库

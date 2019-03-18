@@ -14,7 +14,7 @@ export default async function request(options): Promise<any> {
       headers: {
         referer: options.url,
         'X-Forwarded-For': '121.168.0.' + Math.ceil(Math.random() * 200) + 10,
-        'user-agent': userAgent,
+        'User-Agent': userAgent,
       },
     };
     const newOptions = { ...defaultOptions, ...options };
