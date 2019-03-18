@@ -21,6 +21,7 @@
     "clean": "ets clean"
   },
   "dependencies": {
+    "@bit/date-fns.date-fns.add-milliseconds": "^2.0.0",
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
     "cookie": "^0.3.1",

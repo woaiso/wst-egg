@@ -27,6 +27,8 @@ export default class DribbbleJobController extends Controller {
           proxyEnable,
         });
         if (result) {
+          // 接着创建定时任务用于执行真实操作
+          await dribbbleService.createTask(result);
           ctx.body = new ResponseJSON(1001, '创建成功', { data: result });
         } else {
           ctx.body = new ResponseJSON(1001, '创建失败');

@@ -1,3 +1,5 @@
+import * as addMilliseconds from '@bit/date-fns.date-fns.add-milliseconds';
+
 import { Service } from 'egg';
 
 export default class DribbbleService extends Service {
@@ -109,5 +111,35 @@ export default class DribbbleService extends Service {
    */
   async getUserInfoByAccountAndPassword(account, password) {
     return this.ctx.service.worker.dribbble.getUserInfo({ account, password });
+  }
+
+  async createTask(dribbbleJob) {
+    // 1. 查询出所有可用的账号ID
+    const { DribbbleAccount, DribbbleTask, DribbbleJob } = this.ctx.model;
+    const { counter } = this.ctx.service;
+    const usableAccount = await DribbbleAccount.find({
+      status: { $eq: 1 },
+    }).select('id');
+    if (usableAccount && usableAccount.length > 0) {
+      for (let i = 0; i < usableAccount.length; i++) {
+        const account = usableAccount[i];
+        const { timeRange } = dribbbleJob;
+        const stepSec = (timeRange * 60 * 60) / usableAccount.length; // 任务间隔时间（单位：秒）
+        const task = {
+          id: await counter.getNextSequence('dribbble_task'),
+          jobId: dribbbleJob.id,
+          accountId: account.id,
+          startTime: addMilliseconds(new Date(), stepSec * (i + 1)),
+        };
+        await DribbbleTask.create(task);
+      }
+      // 更新任务信息
+      await DribbbleJob.updateOne(
+        { id: { $eq: dribbbleJob.id } },
+        { all: usableAccount.length }
+      );
+    } else {
+      throw new Error('创建任务失败，请添加Dribbble账号后重试');
+    }
   }
 }
