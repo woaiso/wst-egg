@@ -195,9 +195,6 @@ export default class WorkerDribbble extends Service {
     const shotInfo = await this.getShotInfo(source, credentials);
 
     this.ctx.logger.info('获取Shot信息', JSON.stringify(shotInfo));
-
-    this.ctx.logger.info('获取登录信息', JSON.stringify(credentials));
-
     const headers = {
       accept: '*/*',
       'accept-encoding': 'gzip, deflate, br',

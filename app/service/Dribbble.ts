@@ -149,7 +149,6 @@ export default class DribbbleService extends Service {
     const time = addMilliseconds(new Date(), 5 * 60);
     const tasks = await DribbbleTask.find({ startTime: { $lte: time } });
     if (tasks && tasks.length > 0) {
-      tasks.length = 1;
       for (const task of tasks) {
         // 查询出账号信息，查询出任务信息，然后操作
         const job = await DribbbleJob.findOne({ id: { $eq: task.jobId } });
