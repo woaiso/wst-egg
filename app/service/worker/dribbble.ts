@@ -233,6 +233,13 @@ export default class WorkerDribbble extends Service {
         );
         return credentialsArray;
       } else {
+        // 登录失败，更新账号状态
+        await DribbbleAccount.findOneAndUpdate(
+          { account: { $eq: passport.account } },
+          {
+            status: 3,
+          },
+        );
         return null;
       }
     } else {
