@@ -170,40 +170,52 @@ export default class WorkerDribbble extends Service {
     });
   }
   /**
-   * 点赞
-   * @param {string} userName 当前登录用户的ID
-   * @param {string} screenshotId 作品ID
-   * @param {string} referer 当前作品的URL
+   * 点赞操作
+   * @param {DribbbleAccount} account 需要操作的用户信息
+   * @param {DribbbleJob} job 需要操作的任务信息
    */
-  async like(userName, screenshotId, referer, csrfToken) {
-    const url = `https://dribbble.com/${userName}/likes?screenshot_id=${screenshotId}`;
-    return new Promise((resolve, reject) => {
-      request({
-        url,
-        method: 'POST',
-        headers: {
-          accept: '*/*',
-          'accept-encoding': 'gzip, deflate, br',
-          'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7',
-          'cache-control': 'no-cache',
-          'content-length': 0,
-          referer: referer,
-          'x-requested-with': 'XMLHttpRequest',
-          origin: 'https://dribbble.com',
-          'x-csrf-token': csrfToken,
-        },
-      }).then(res => {
-        const html = res.data;
-        const num = $(html)
-          .find('.stats-num')
-          .children()
-          .remove()
-          .end()
-          .text()
-          .trim();
-        resolve(num);
-      }, reject);
-    });
+  async like(account, job) {
+    const { source } = job;
+    const { username, credentials } = account;
+    const regex = /dribbble\.com\/shots\/([\s\S]+)\??/.exec(source);
+    const shotId = regex && regex.length > 0 ? regex[1] : null;
+    if (!shotId) {
+      throw new Error('请检查任务');
+    }
+    const likeUrl = `https://dribbble.com/${username}/likes?screenshot_id=${shotId}`;
+
+    // 先浏览页面获取到csrfToken
+    const shotInfo = await this.getShotInfo(source);
+
+    this.ctx.logger.info('获取Shot信息', shotInfo);
+
+    const headers = {
+      accept: '*/*',
+      'accept-encoding': 'gzip, deflate, br',
+      'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7',
+      'cache-control': 'no-cache',
+      'content-length': 0,
+      referer: source,
+      origin: 'https://dribbble.com',
+      'x-requested-with': 'XMLHttpRequest',
+      'x-csrf-token': shotInfo.csrfToken,
+      cookie: createCookieStrForReques(credentials),
+    };
+    try {
+      const ret = await request({ url: likeUrl, method: 'POST', headers });
+      const html = ret.data;
+      const num = $(html)
+        .find('.stats-num')
+        .children()
+        .remove()
+        .end()
+        .text()
+        .trim();
+
+      return num;
+    } catch (e) {
+      this.ctx.logger.error(e);
+    }
   }
   /**
    * 获取登录凭证，首先查询是否存在可使用的凭证，不存在则登录获取，并存储到数据库
@@ -229,7 +241,7 @@ export default class WorkerDribbble extends Service {
           { account: { $eq: passport.account } },
           {
             credentials: credentialsArray,
-          },
+          }
         );
         return credentialsArray;
       } else {
@@ -238,7 +250,7 @@ export default class WorkerDribbble extends Service {
           { account: { $eq: passport.account } },
           {
             status: 3,
-          },
+          }
         );
         return null;
       }
@@ -270,8 +282,10 @@ export default class WorkerDribbble extends Service {
       .text()
       .trim();
     const avatar = dom.find('#t-profile>a>img').attr('src');
-    const username = dom.find('#t-profile>a').attr('href')
-    .replace(/\//g, '');
+    const username = dom
+      .find('#t-profile>a')
+      .attr('href')
+      .replace(/\//g, '');
     // 获取用户的一些详细信息
     let user = { nickname, avatar, username } as any;
     try {
@@ -300,42 +314,5 @@ export default class WorkerDribbble extends Service {
       this.ctx.logger.error(e);
     }
     return user;
-  }
-
-  /**
-   * 点赞
-   * @param {string} shotUrls 作品链接
-   * @param {User} user 登录的用户信息
-   */
-  async rate(shotUrls = [], user) {
-    return new Promise(async (resolve, reject) => {
-      if (shotUrls && user) {
-        try {
-          const userInfo = await this.getUserInfo(user);
-          return Promise.all(
-            shotUrls.map(async url => {
-              const {
-                csrfToken,
-                likes,
-                views,
-                buckets,
-              } = await this.getShotInfo(url);
-              console.log(likes, views, buckets);
-              const likeNum = await this.like(
-                userInfo.userName,
-                this.getShotId(url),
-                url,
-                csrfToken
-              );
-              resolve(likeNum);
-            })
-          );
-        } catch (e) {
-          reject('处理失败');
-        }
-      } else {
-        return Promise.reject('请传入正确的URL和用户');
-      }
-    });
   }
 }

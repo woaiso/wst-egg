@@ -142,4 +142,27 @@ export default class DribbbleService extends Service {
       throw new Error('创建任务失败，请添加Dribbble账号后重试');
     }
   }
+  // 执行定时任务
+  async execTask() {
+    const { DribbbleTask, DribbbleAccount, DribbbleJob } = this.ctx.model;
+    // 查询当前时间+5分钟以前的所有未执行的任务
+    const time = addMilliseconds(new Date(), 5 * 60);
+    const tasks = await DribbbleTask.find({ startTime: { $lte: time } });
+    if (tasks && tasks.length > 0) {
+      tasks.length = 1;
+      for (const task of tasks) {
+        // 查询出账号信息，查询出任务信息，然后操作
+        const job = await DribbbleJob.findOne({ id: { $eq: task.jobId } });
+        const account = await DribbbleAccount.findOne({
+          id: { $eq: task.accountId },
+        });
+        if (+job.likeEnable === 1) {
+          // 点赞
+         this.ctx.service.worker.dribbble.like(account, job);
+        }
+      }
+    } else {
+      this.ctx.logger.info('当前没有任务需要执行');
+    }
+  }
 }

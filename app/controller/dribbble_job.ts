@@ -54,4 +54,10 @@ export default class DribbbleJobController extends Controller {
       },
     });
   }
+
+  async new (){
+    const {ctx} = this;
+    await ctx.service.dribbble.execTask();
+    ctx.body = '完成';
+  }
 }
