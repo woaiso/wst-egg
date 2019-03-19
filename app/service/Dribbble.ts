@@ -61,7 +61,7 @@ export default class DribbbleService extends Service {
       } else {
         errorQueue.push(account);
       }
-      // 休眠5秒
+      // 休眠30秒
       await sleep(30000);
     }
     return {
