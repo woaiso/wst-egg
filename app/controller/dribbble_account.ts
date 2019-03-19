@@ -3,7 +3,7 @@
 import { Controller } from 'egg';
 import ResponseJSON from '../utils/ResponseJSON';
 
-const maxBatchCount = 50;
+const maxBatchCount = 500;
 
 export default class DribbbleAccountController extends Controller {
   async create() {
