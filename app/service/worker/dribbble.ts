@@ -114,13 +114,15 @@ export default class WorkerDribbble extends Service {
    * 获取作品的详细信息
    * @param {string} shotUrl 作品URL
    */
-  async getShotInfo(shotUrl, credentials): Promise<any> {
+  async getShotInfo(shotUrl, credentials?: any): Promise<any> {
     return new Promise((resolve, reject) => {
+      const headers = {} as any;
+      if (credentials) {
+        headers.cookie = createCookieStrForReques(credentials);
+      }
       request({
         url: shotUrl,
-        headers: {
-          cookie: createCookieStrForReques(credentials),
-        },
+        headers,
       }).then(res => {
         const html = res.data;
         const dom = $(html);
