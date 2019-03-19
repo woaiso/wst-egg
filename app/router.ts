@@ -13,5 +13,7 @@ export default (app: Application) => {
   );
   router.get('/automator/get_dribbble_account_info', controller.dribbbleAccount.getUserInfo);
   router.resources('dribbble_job', '/dribbble_job', controller.dribbbleJob);
-  router.resources('automator', '/automator', controller.automator);
+  router.get('/automator/dribbble', controller.automator.show);
+  router.post('/automator', controller.automator.create);
+  router.get('/automator/dribbble_task', controller.dribbble.fetchDribbbleTask);
 };
