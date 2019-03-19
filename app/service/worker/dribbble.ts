@@ -48,7 +48,6 @@ export default class WorkerDribbble extends Service {
    * {account: string, password: string, token: string}
    */
   async login(user) {
-    console.log('user', user);
     const url = 'https://dribbble.com/session';
     const res = await request({
       url,
