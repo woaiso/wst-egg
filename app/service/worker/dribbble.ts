@@ -303,7 +303,7 @@ export default class WorkerDribbble extends Service {
         user.dribbble_uid = match[1];
         user = { ...user, ...JSON.parse(match[2]) };
       }
-      this.ctx.logger.info(user);
+      this.ctx.logger.info(JSON.stringify(user));
       // 此处将用户信息重新设置并更新
       user = await this.ctx.model.DribbbleAccount.updateOne(
         {

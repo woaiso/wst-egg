@@ -1,6 +1,7 @@
 import * as addMilliseconds from '@bit/date-fns.date-fns.add-milliseconds';
 
 import { Service } from 'egg';
+import { sleep } from '../utils';
 
 export default class DribbbleService extends Service {
   /**
@@ -60,6 +61,8 @@ export default class DribbbleService extends Service {
       } else {
         errorQueue.push(account);
       }
+      // 休眠5秒
+      await sleep(30000);
     }
     return {
       success: successQueue,
@@ -178,6 +181,22 @@ export default class DribbbleService extends Service {
       }
     } else {
       this.ctx.logger.info('当前没有任务需要执行');
+    }
+  }
+
+  /**
+   * 查询未初始化的账户，进行初始化登录
+   * 每个任务间隔五秒执行
+   * @memberof DribbbleService
+   */
+  async initialAccount() {
+    const { DribbbleAccount } = this.ctx.model;
+    const accounts = await DribbbleAccount.find(
+      { status: { $eq: 0 } },
+      { account: 1, password: 1 },
+    );
+    if (accounts && accounts.length > 0) {
+      this.fillAccountInfo(accounts);
     }
   }
 }

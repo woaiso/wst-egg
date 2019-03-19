@@ -4,9 +4,9 @@ import { Controller } from 'egg';
 import ResponseJSON from '../utils/ResponseJSON';
 
 export default class AutomatorController extends Controller {
-  async show() {
+  async getInfo() {
     const { ctx } = this;
-    const { id: name } = ctx.params;
+    const { name } = ctx.query;
     try {
       const automatorInfo = await ctx.service.automator.findAutomatorInfoByName(
         name

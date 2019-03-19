@@ -8,6 +8,7 @@ import ExportDribbble from '../../../app/controller/dribbble';
 import ExportDribbbleAccount from '../../../app/controller/dribbble_account';
 import ExportDribbbleJob from '../../../app/controller/dribbble_job';
 import ExportJobMock from '../../../app/controller/job_mock';
+import ExportSystem from '../../../app/controller/system';
 import ExportUser from '../../../app/controller/user';
 
 declare module 'egg' {
@@ -18,6 +19,7 @@ declare module 'egg' {
     dribbbleAccount: ExportDribbbleAccount;
     dribbbleJob: ExportDribbbleJob;
     jobMock: ExportJobMock;
+    system: ExportSystem;
     user: ExportUser;
   }
 }
