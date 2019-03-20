@@ -1,11 +1,11 @@
 // 自动化工具
 
-import { Controller } from 'egg';
 import ResponseJSON from '../utils/ResponseJSON';
+import BaseController from './base';
 
 const maxBatchCount = 500;
 
-export default class DribbbleAccountController extends Controller {
+export default class DribbbleAccountController extends BaseController {
   async create() {
     const { ctx } = this;
     const postParams = ctx.request.body;
@@ -98,6 +98,65 @@ export default class DribbbleAccountController extends Controller {
     } catch (e) {
       this.ctx.logger.error(e);
       ctx.body = new ResponseJSON(1001, e.message);
+    }
+  }
+
+  async delete() {
+    const { ids = [] } = this.ctx.request.body;
+    const { DribbbleAccount } = this.ctx.model;
+    if (status && ids && ids.length > 0) {
+      try {
+        const ret = await DribbbleAccount.deleteMany({ id: { $in: ids } });
+        if (ret) {
+          return this.success('删除成功');
+        } else {
+          return this.error('删除失败');
+        }
+      } catch (e) {
+        return this.error('操作失败');
+      }
+    } else {
+      return this.error('参数错误');
+    }
+  }
+
+  /**
+   * 暂停账户使用
+   *
+   * @memberof DribbbleAccountController
+   */
+  async changeStatus() {
+    const { status = 2, ids = [] } = this.ctx.request.body;
+    const { DribbbleAccount } = this.ctx.model;
+    if (status && ids && ids.length > 0) {
+      try {
+        const message = [] as string[];
+        for (const id of ids) {
+          const account = await DribbbleAccount.findOne({
+            id: { $eq: id },
+          }).select('credentials');
+          if (+status === 2) {
+            // 表示要将账号暂停使用
+            await DribbbleAccount.updateOne({ id: { $eq: id } }, { status });
+            message.push(`${id}:暂停成功`);
+          } else if (+status === 1) {
+            // 表示要将账号启用，启用账号必须保证当前有登录信息
+            if (account.credentials && account.credentials.length > 0) {
+              // 可以操作
+              await DribbbleAccount.updateOne({ id: { $eq: id } }, { status });
+              message.push(`${id}:启用成功`);
+            } else {
+              // 不允许操作
+              message.push(`${id}:未初始化或登录信息错误不允许启用`);
+            }
+          }
+        }
+        return this.success('操作成功');
+      } catch (e) {
+        return this.error('操作失败');
+      }
+    } else {
+      return this.error('参数错误');
     }
   }
 }

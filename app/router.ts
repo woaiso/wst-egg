@@ -9,6 +9,7 @@ export default (app: Application) => {
 
   router.post('/dribbble_account/list', controller.dribbbleAccount.index);
   router.post('/dribbble_account/create', controller.dribbbleAccount.create);
+  router.post('/dribbble_account/change_status', controller.dribbbleAccount.changeStatus);
 
   router.get('/automator/get_dribbble_account_info', controller.dribbbleAccount.getUserInfo);
   router.resources('dribbble_job', '/dribbble_job', controller.dribbbleJob);
