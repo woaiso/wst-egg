@@ -15,7 +15,7 @@ export default (app: Application) => {
   router.resources('dribbble_job', '/dribbble_job', controller.dribbbleJob);
   router.get('/automator/get_info', controller.automator.getInfo);
   router.post('/automator', controller.automator.create);
-  router.get('/automator/dribbble_task', controller.dribbble.fetchDribbbleTask);
+  router.get('/dribbble_task/list', controller.dribbble.fetchDribbbleTask);
 
   // 仅系统级别使用
   router.get('/system/initial_account', controller.system.initialDribbbleAccount);
