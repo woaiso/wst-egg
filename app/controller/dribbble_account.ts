@@ -32,10 +32,7 @@ export default class DribbbleAccountController extends Controller {
               );
             } else {
               // 添加失败
-              ctx.body = new ResponseJSON(
-                1001,
-                '添加失败，请检查后重试'
-              );
+              ctx.body = new ResponseJSON(1001, '添加失败，请检查后重试');
             }
           } else {
             // 大于1直接返回添加结果，在后台慢慢初始化信息
@@ -61,20 +58,29 @@ export default class DribbbleAccountController extends Controller {
 
   async index() {
     const { ctx } = this;
-    const { pageSize = 10, current = 1 } = ctx.request.query;
-    const list = await ctx.model.DribbbleAccount.find()
+    const {
+      pagination = { page_size: 20, current: 1 },
+      sorter = { id: 'descending' },
+      filters = {},
+    } = ctx.request.body;
+    const { page_size: pageSize, current } = pagination;
+    const findFilter = {};
+    if (filters) {
+      for (const key of Object.keys(filters)) {
+        findFilter[key] = { $in: filters[key] };
+      }
+    }
+    const list = await ctx.model.DribbbleAccount.find(findFilter)
       .limit(+pageSize)
       .skip((+current - 1) * +pageSize)
-      .sort({
-        id: 'asc',
-      });
-    const total = await ctx.model.DribbbleAccount.find().count();
+      .sort(sorter);
+    const total = await ctx.model.DribbbleAccount.find(findFilter).count();
     ctx.body = new ResponseJSON(0, 'success', {
       data: {
         pagination: {
           current: +current,
           total,
-          pageSize: +pageSize,
+          page_size: +pageSize,
         },
         list,
       },
