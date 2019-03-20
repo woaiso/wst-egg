@@ -1,9 +1,9 @@
 import * as jwt from 'jsonwebtoken';
 
-import { Controller } from 'egg';
 import ResponseJSON from '../utils/ResponseJSON';
+import BaseController from './base';
 
-export default class UserController extends Controller {
+export default class UserController extends BaseController {
   /**
    * 登录
    */
@@ -11,7 +11,7 @@ export default class UserController extends Controller {
     const { ctx } = this;
     const { mail: username, password, type } = ctx.request.body;
     if (!username) {
-      return (ctx.body = new ResponseJSON(400, '请输入正确的用户名', { type }));
+      return (ctx.body = new ResponseJSON(400, '', { type }));
     }
     if (!password) {
       return (ctx.body = new ResponseJSON(400, '请输入正确的密码', { type }));

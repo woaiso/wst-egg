@@ -10,8 +10,8 @@ export default class BaseController extends Controller {
     return (this.ctx.body = new ResponseJSON(1001, message));
   }
 
-  protected success(message) {
-    return (this.ctx.body = new ResponseJSON(0, message));
+  protected success(message, data?: any) {
+    return (this.ctx.body = new ResponseJSON(0, message, data));
   }
 
   protected async pageSelect(model: Model<any>) {
@@ -25,9 +25,14 @@ export default class BaseController extends Controller {
     const findFilter = {};
     if (filters) {
       for (const key of Object.keys(filters)) {
-        findFilter[key] = { $in: filters[key] };
+        if (Array.isArray(filters[key])) {
+          findFilter[key] = { $in: filters[key] };
+        } else {
+          findFilter[key] = { $eq: filters[key] };
+        }
       }
     }
+    console.log(findFilter);
     const list = await model
       .find(findFilter)
       .limit(+pageSize)

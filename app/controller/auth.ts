@@ -1,9 +1,7 @@
-import { Controller } from 'egg';
-import ResponseJSON from '../utils/ResponseJSON';
-export default class AuthController extends Controller {
+import BaseController from './base';
+export default class AuthController extends BaseController {
   authRoutes() {
-    const { ctx } = this;
-    ctx.body = new ResponseJSON(0, 'success', {
+    return this.json({
       route: { '/automator/dribbble': { authority: ['admin', 'user'] } },
     });
   }

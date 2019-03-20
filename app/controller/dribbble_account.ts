@@ -1,6 +1,5 @@
 // 自动化工具
 
-import ResponseJSON from '../utils/ResponseJSON';
 import BaseController from './base';
 
 const maxBatchCount = 500;
@@ -12,10 +11,7 @@ export default class DribbbleAccountController extends BaseController {
     if (Array.isArray(postParams)) {
       // 必须为一个数组，允许的最大添加数量
       if (postParams.length > maxBatchCount) {
-        ctx.body = new ResponseJSON(
-          1001,
-          `批量添加最大支持${maxBatchCount}条数据`
-        );
+        return this.error(`批量添加最大支持${maxBatchCount}条数据`);
       } else {
         try {
           const result = await ctx.service.dribbble.createAccounnt(postParams);
@@ -26,18 +22,16 @@ export default class DribbbleAccountController extends BaseController {
           if (postParams.length === 1) {
             if (result.success.length === 1) {
               // 添加成功
-              ctx.body = new ResponseJSON(
-                0,
-                '添加成功,用户信息正在后台确认并初始化，请稍后查询'
+              return this.success(
+                `'添加成功,用户信息正在后台确认并初始化，请稍后查询'`
               );
             } else {
               // 添加失败
-              ctx.body = new ResponseJSON(1001, '添加失败，请检查后重试');
+              return this.error(`添加失败，请检查后重试`);
             }
           } else {
             // 大于1直接返回添加结果，在后台慢慢初始化信息
-            ctx.body = new ResponseJSON(
-              0,
+            return this.success(
               `操作完成，共写入${result.success.length}条数据，写入错误${
                 result.error.length
               }条，已存在${
@@ -48,11 +42,11 @@ export default class DribbbleAccountController extends BaseController {
           }
         } catch (e) {
           ctx.logger.error(e);
-          ctx.body = new ResponseJSON(1001, e.message);
+          return this.error(e.message);
         }
       }
     } else {
-      ctx.body = new ResponseJSON(1001, '参数错误');
+      return this.error('参数错误');
     }
   }
 
@@ -75,15 +69,13 @@ export default class DribbbleAccountController extends BaseController {
       .skip((+current - 1) * +pageSize)
       .sort(sorter);
     const total = await ctx.model.DribbbleAccount.find(findFilter).count();
-    ctx.body = new ResponseJSON(0, 'success', {
-      data: {
-        pagination: {
-          current: +current,
-          total,
-          page_size: +pageSize,
-        },
-        list,
+    return this.json({
+      pagination: {
+        current: +current,
+        total,
+        page_size: +pageSize,
       },
+      list,
     });
   }
 
@@ -97,7 +89,7 @@ export default class DribbbleAccountController extends BaseController {
       );
     } catch (e) {
       this.ctx.logger.error(e);
-      ctx.body = new ResponseJSON(1001, e.message);
+      return this.error(e.message);
     }
   }
 

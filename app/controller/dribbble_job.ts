@@ -1,9 +1,8 @@
 // 自动化工具
 
-import { Controller } from 'egg';
-import ResponseJSON from '../utils/ResponseJSON';
+import BaseController from './base';
 
-export default class DribbbleJobController extends Controller {
+export default class DribbbleJobController extends BaseController {
   async create() {
     const { ctx } = this;
     const postParams = ctx.request.body;
@@ -29,34 +28,32 @@ export default class DribbbleJobController extends Controller {
         if (result) {
           // 接着创建定时任务用于执行真实操作
           await dribbbleService.createTask(result);
-          ctx.body = new ResponseJSON(1001, '创建成功', { data: result });
+          return this.success('创建成功', result);
         } else {
-          ctx.body = new ResponseJSON(1001, '创建失败');
+          return this.error('创建失败');
         }
       } else {
-        ctx.body = new ResponseJSON(1001, `创建失败,${postParams.source} 已存在`);
+        return this.error('创建失败,${postParams.source} 已存在');
       }
     } catch (e) {
       ctx.logger.error(e);
-      ctx.body = new ResponseJSON(1001, e.message);
+      return this.error(e.message);
     }
   }
 
   async index() {
     const { ctx } = this;
     const data = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
-    ctx.body = new ResponseJSON(0, 'success', {
-      data: {
-        inProcessing: 100,
-        compelte: 20,
-        averageTime: '20秒',
-        list: data,
-      },
+    return this.json({
+      inProcessing: 100,
+      compelte: 20,
+      averageTime: '20秒',
+      list: data,
     });
   }
 
-  async new (){
-    const {ctx} = this;
+  async new() {
+    const { ctx } = this;
     await ctx.service.dribbble.execTask();
     ctx.body = '完成';
   }

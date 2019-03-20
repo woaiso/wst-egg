@@ -1,9 +1,8 @@
 // 自动化工具
 
-import { Controller } from 'egg';
-import ResponseJSON from '../utils/ResponseJSON';
+import BaseController from './base';
 
-export default class AutomatorController extends Controller {
+export default class AutomatorController extends BaseController {
   async getInfo() {
     const { ctx } = this;
     const { name } = ctx.query;
@@ -12,14 +11,12 @@ export default class AutomatorController extends Controller {
         name
       );
       if(automatorInfo) {
-        ctx.body = new ResponseJSON(0, 'success', {
-            data: automatorInfo,
-          });
+        return this.json(automatorInfo);
       } else {
-        ctx.body = new ResponseJSON(0, '未查询到该工具');
+        return this.error('未查询到该工具');
       }
     } catch (e) {
-      ctx.body = new ResponseJSON(0, '未查询到该工具');
+      return this.error('未查询到该工具');
     }
   }
 
@@ -54,9 +51,9 @@ export default class AutomatorController extends Controller {
         remark,
       });
       if (result) {
-        ctx.body = new ResponseJSON(0, '成功！');
+        return this.success('成功');
       } else {
-        ctx.body = new ResponseJSON(1001, '创建失败!请稍后重试');
+        return this.error('创建失败!请稍后重试');
       }
     } catch (e) {
         this.ctx.logger.error(e.message);
