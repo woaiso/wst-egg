@@ -73,7 +73,7 @@ export default class UserController extends BaseController {
       return (ctx.body = new ResponseJSON(400, '请输入正确的昵称'));
     }
     // 验证邀请码是否正确
-    if (invitation_code !== '888') {
+    if (invitation_code !== '97379') {
       ctx.body = {
         code: 101,
         message: '请输入正确的邀请码',
