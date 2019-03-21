@@ -8,38 +8,22 @@ export interface BizConfig {
   sourceUrl: string;
 }
 
-export default ( appInfo: EggAppConfig ) => {
+export default (appInfo: EggAppConfig) => {
   const config = {} as PowerPartial<EggAppConfig> & BizConfig;
 
-  // app special config
-  config.sourceUrl = `https://github.com/eggjs/examples/tree/master/${appInfo.name}`;
-
   // override config from framework / plugin
-  // use for cookie sign key, should change to your own and keep security
-  config.keys = appInfo.name + '_1524105246005_4275';
+
+  config.keys = appInfo.name + 'woaiso_sec_key_23832';
 
   // add your config here
-  config.middleware = [
-    'auth',
-  ];
+  config.middleware = ['auth'];
 
   config.bodyParser = {
     enable: true,
     jsonLimit: '10mb',
   };
 
-  config.mongo = {
-    client: {
-      host: [ '127.0.0.1' ], // or ['host']
-      port: [ 27017 ], // or ['port1', 'port2']
-      name: '',
-      options: {
-        replicaSet: 'test',
-      },
-    },
-  };
-
-  config.security =  {
+  config.security = {
     csrf: {
       enable: false,
       ignore: () => true,
@@ -64,7 +48,7 @@ export default ( appInfo: EggAppConfig ) => {
       reconnectTries: Number.MAX_VALUE, // 尝试重试连接:js最大值
       bufferMaxEntries: 0,
     },
-}
+  };
 
   return config;
 };
