@@ -216,7 +216,6 @@ export default class WorkerDribbble extends Service {
       if (rex && rex.length > 1) {
         num = rex[1];
       }
-      this.ctx.logger.info('点赞完成', num);
       return num;
     } catch (e) {
       this.ctx.logger.error(e);

@@ -43,12 +43,14 @@ export default class DribbbleJobController extends BaseController {
 
   async index() {
     const { ctx } = this;
-    const data = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
+    const list = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
+    const count = await ctx.model.DribbbleJob.find().count();
+    // 计算有多少任务已经完成
     return this.json({
-      inProcessing: 100,
-      compelte: 20,
-      averageTime: '20秒',
-      list: data,
+      inProcessing: count,
+      compelte: list.filter((item) => item.processed === item.all).length,
+      averageTime: '5秒',
+      list,
     });
   }
 

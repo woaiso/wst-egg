@@ -152,12 +152,13 @@ export default class DribbbleService extends Service {
   async execTask() {
     const { DribbbleTask, DribbbleAccount, DribbbleJob } = this.ctx.model;
     // 查询当前时间+5分钟以前的所有未执行的任务
-    const time = addMilliseconds(new Date(), 5 * 60);
+    const time = addMilliseconds(new Date(), 5 * 60 * 1000) as Date;
     const tasks = await DribbbleTask.find({
-      startTime: { $lte: time },
+      startTime: { $lt: time },
       status: { $eq: 0 },
     });
     if (tasks && tasks.length > 0) {
+      this.ctx.logger.info(`本次共执行${tasks.length}`);
       for (const task of tasks) {
         // 查询出账号信息，查询出任务信息，然后操作
         const job = await DribbbleJob.findOne({ id: { $eq: task.jobId } });
@@ -168,8 +169,9 @@ export default class DribbbleService extends Service {
           // 点赞
           // 计时
           const start = new Date().getTime();
-          const likenum = this.ctx.service.worker.dribbble.like(account, job);
+          const likenum = await this.ctx.service.worker.dribbble.like(account, job);
           if (likenum) {
+            this.ctx.logger.error(`点赞成功 task:${task.id},job:${task.jobId},account:${task.accountId}`);
             // 更新当前task状态
             await DribbbleTask.findOneAndUpdate(
               { _id: { $eq: task._id } },
@@ -190,6 +192,8 @@ export default class DribbbleService extends Service {
                 likes: likenum,
               },
             );
+          } else {
+            this.ctx.logger.error(`点赞失败 task:${task.id},job:${task.jobId},account:${task.accountId}`);
           }
         }
       }
