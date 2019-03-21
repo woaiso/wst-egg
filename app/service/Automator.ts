@@ -9,7 +9,7 @@ export default class AutomatorService extends Service {
    * @param automatorName 自动化工具名称
    */
   async findAutomatorInfoByName(automatorName: string) {
-    return this.ctx.model.Automator.findOne({ name: { $eq: automatorName } });
+    return this.ctx.model.Automator.findOne({ name: { $eq: automatorName } }).lean(true);
   }
   /**
    * 插入一条自动化工具

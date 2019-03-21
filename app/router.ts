@@ -19,4 +19,5 @@ export default (app: Application) => {
 
   // 仅系统级别使用
   router.get('/system/initial_account', controller.system.initialDribbbleAccount);
+  router.get('/notices', controller.user.notices);
 };
