@@ -1,7 +1,7 @@
 export default {
   schedule: {
     type: 'worker',
-    cron: '0 */5 * * * *',
+    cron: '10/* * * * * *',
   },
   task: async (ctx) => {
     ctx.logger.info('run cron task');
