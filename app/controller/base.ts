@@ -32,7 +32,6 @@ export default class BaseController extends Controller {
         }
       }
     }
-    console.log(findFilter);
     const list = await model
       .find(findFilter)
       .limit(+pageSize)

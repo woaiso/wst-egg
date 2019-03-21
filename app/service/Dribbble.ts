@@ -124,15 +124,18 @@ export default class DribbbleService extends Service {
       status: { $eq: 1 },
     }).select('id');
     if (usableAccount && usableAccount.length > 0) {
+      const { timeRange } = dribbbleJob;
+      const stepMilSec = (timeRange * 60 * 60 * 1000) / usableAccount.length; // 任务间隔时间（单位：毫秒）
       for (let i = 0; i < usableAccount.length; i++) {
         const account = usableAccount[i];
-        const { timeRange } = dribbbleJob;
-        const stepSec = (timeRange * 60 * 60) / usableAccount.length; // 任务间隔时间（单位：秒）
         const task = {
           id: await counter.getNextSequence('dribbble_task'),
           jobId: dribbbleJob.id,
           accountId: account.id,
-          startTime: addMilliseconds(new Date(), stepSec * (i + 1)),
+          startTime: addMilliseconds(
+            new Date(),
+            Math.ceil(stepMilSec * (i + 1))
+          ),
         };
         await DribbbleTask.create(task);
       }
@@ -152,7 +155,7 @@ export default class DribbbleService extends Service {
     const time = addMilliseconds(new Date(), 5 * 60);
     const tasks = await DribbbleTask.find({
       startTime: { $lte: time },
-      status: { $eq: -1 },
+      status: { $eq: 0 },
     });
     if (tasks && tasks.length > 0) {
       for (const task of tasks) {
@@ -176,6 +179,17 @@ export default class DribbbleService extends Service {
                 totalTime: Math.ceil((new Date().getTime() - start) / 1000), // 任务耗时（单位：秒）
               }
             );
+
+            // 更新job信息
+            await DribbbleJob.findOneAndUpdate(
+              {
+                id: { $eq: task.jobId },
+              },
+              {
+                $inc: { processed: 1 },
+                likes: likenum,
+              },
+            );
           }
         }
       }
@@ -193,7 +207,7 @@ export default class DribbbleService extends Service {
     const { DribbbleAccount } = this.ctx.model;
     const accounts = await DribbbleAccount.find(
       { status: { $eq: 0 } },
-      { account: 1, password: 1 },
+      { account: 1, password: 1 }
     );
     if (accounts && accounts.length > 0) {
       this.fillAccountInfo(accounts);

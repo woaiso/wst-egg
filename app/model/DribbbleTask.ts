@@ -19,7 +19,7 @@ export default (app: Application) => {
     },
     status: {
       type: Number,
-      default: -1,
+      default: 0,
     },
     // 任务耗时
     totalTime: {
