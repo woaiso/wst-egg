@@ -18,7 +18,7 @@ export default class BaseController extends Controller {
     const { ctx } = this;
     const {
       pagination = { page_size: 20, current: 1 },
-      sorter = { id: 'descending' },
+      sorter = { id: 'asc' },
       filters = {},
     } = ctx.request.body;
     const { page_size: pageSize, current } = pagination;
