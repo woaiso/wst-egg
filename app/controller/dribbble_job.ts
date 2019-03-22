@@ -49,11 +49,12 @@ export default class DribbbleJobController extends BaseController {
     const { ctx } = this;
     const list = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
     const count = await ctx.model.DribbbleJob.find().count();
+    const compelte = list.filter((item) => item.processed === item.all).length;
     // 计算有多少任务已经完成
     return this.json({
-      inProcessing: count,
-      compelte: list.filter((item) => item.processed === item.all).length,
-      averageTime: '5秒',
+      inProcessing: count - compelte,
+      compelte,
+      averageTime: '4秒',
       list,
     });
   }
