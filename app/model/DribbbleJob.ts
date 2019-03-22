@@ -33,6 +33,16 @@ export default (app: Application) => {
       type: Number,
       default: 0,
     },
+    // 点赞数量
+    likeNum: {
+      type: Number,
+      default: 0,
+    },
+    // 关注数量
+    fllowNum: {
+      type: Number,
+      default: 0,
+    },
     // 启用代理
     proxyEnable: {
       type: Number,

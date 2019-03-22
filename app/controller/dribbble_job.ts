@@ -13,6 +13,8 @@ export default class DribbbleJobController extends BaseController {
       like_enable: likeEnable,
       fllow_enable: fllowEnable,
       proxy_enable: proxyEnable,
+      like_num: likeNum,
+      fllow_num: fllowNum,
       source,
     } = postParams;
     const dribbbleService = ctx.service.dribbble;
@@ -24,6 +26,8 @@ export default class DribbbleJobController extends BaseController {
           likeEnable,
           fllowEnable,
           proxyEnable,
+          likeNum,
+          fllowNum,
         });
         if (result) {
           // 接着创建定时任务用于执行真实操作

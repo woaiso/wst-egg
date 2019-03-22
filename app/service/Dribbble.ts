@@ -122,7 +122,7 @@ export default class DribbbleService extends Service {
     const { counter } = this.ctx.service;
     const usableAccount = await DribbbleAccount.find({
       status: { $eq: 1 },
-    }).select('id');
+    }).select('id').limit(dribbbleJob.likeNum);
     if (usableAccount && usableAccount.length > 0) {
       const { timeRange } = dribbbleJob;
       const stepMilSec = (timeRange * 60 * 60 * 1000) / usableAccount.length; // 任务间隔时间（单位：毫秒）
