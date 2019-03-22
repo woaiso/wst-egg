@@ -25,7 +25,7 @@
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
     "cookie": "^0.3.1",
-    "egg": "^2.6.1",
+    "egg": "^2.20.1",
     "egg-cors": "^2.1.2",
     "egg-logger": "^1.7.1",
     "egg-mongoose": "^3.1.1",
