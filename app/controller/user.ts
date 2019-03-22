@@ -115,32 +115,13 @@ export default class UserController extends BaseController {
 
   async center() {
     const { ctx } = this;
-    ctx.body = {
-      name: 'SuperK',
-      avatar: 'https://cdn.dribbble.com/users/1569849/avatars/mini/6b12f9f730f77f68ffd2b2677fb05219.jpg?1485264988',
-      userid: '00000001',
-      email: 'antdesign@alipay.com',
-      signature: '海纳百川，有容乃大',
-      title: '交互专家',
-      group: '蚂蚁金服－某某某事业群－某某平台部－某某技术部－UED',
-      tags: [
-        { key: '0', label: '很有想法的' },
-        { key: '1', label: '专注设计' },
-        { key: '2', label: '辣~' },
-        { key: '3', label: '大长腿' },
-        { key: '4', label: '川妹子' },
-        { key: '5', label: '海纳百川' },
-      ],
-      notifyCount: 0,
-      unreadCount: 0,
-      country: 'China',
-      geographic: {
-        province: { label: '浙江省', key: '330000' },
-        city: { label: '杭州市', key: '330100' },
-      },
-      address: '西湖区工专路 77 号',
-      phone: '0752-268888888',
-    };
+    const { uuid } = ctx.request.header;
+    const { User } = ctx.model;
+    const user = await User.findOne({ uuid: { $eq: uuid } }).lean(true);
+    user.avatar = 'https://cdn.dribbble.com/users/1569849/avatars/mini/6b12f9f730f77f68ffd2b2677fb05219.jpg';
+    user.notifyCount = 0;
+    user.unreadCount = 0;
+    return this.json(user);
   }
 
   async notices() {

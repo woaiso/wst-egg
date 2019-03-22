@@ -20,7 +20,7 @@ export default class DribbbleService extends Service {
       // 排查当前账号是否已存在数据库
       if (!(await this.findDribbbleAccountByAccount(account.account))) {
         account.id = await this.ctx.service.counter.getNextSequence(
-          'dribbble_account'
+          'dribbble_account',
         );
         try {
           const result = await this.ctx.model.DribbbleAccount.create(account);
@@ -54,7 +54,7 @@ export default class DribbbleService extends Service {
     const errorQueue = [] as any[];
     for (const account of accounts) {
       const result = await this.ctx.service.worker.dribbble.getUserInfo(
-        account
+        account,
       );
       if (result) {
         successQueue.push(result);
@@ -134,7 +134,7 @@ export default class DribbbleService extends Service {
           accountId: account.id,
           startTime: addMilliseconds(
             new Date(),
-            Math.ceil(stepMilSec * (i + 1))
+            Math.ceil(stepMilSec * (i + 1)),
           ),
         };
         await DribbbleTask.create(task);
@@ -142,7 +142,7 @@ export default class DribbbleService extends Service {
       // 更新任务信息
       await DribbbleJob.updateOne(
         { id: { $eq: dribbbleJob.id } },
-        { all: usableAccount.length }
+        { all: usableAccount.length },
       );
     } else {
       throw new Error('创建任务失败，请添加Dribbble账号后重试');
@@ -158,7 +158,11 @@ export default class DribbbleService extends Service {
       status: { $eq: 0 },
     });
     if (tasks && tasks.length > 0) {
-      this.ctx.logger.info(`本次共执行${tasks.length}`);
+      this.ctx.logger.info(
+        `本次共执行(${tasks.length}):${tasks
+          .map((item) => item.id.id)
+          .toString()}`,
+      );
       for (const task of tasks) {
         // 查询出账号信息，查询出任务信息，然后操作
         const job = await DribbbleJob.findOne({ id: { $eq: task.jobId } });
@@ -169,17 +173,26 @@ export default class DribbbleService extends Service {
           // 点赞
           // 计时
           const start = new Date().getTime();
-          const likenum = await this.ctx.service.worker.dribbble.like(account, job);
+          const likenum = await this.ctx.service.worker.dribbble.like(
+            account,
+            job,
+          );
           if (likenum) {
-            this.ctx.logger.error(`点赞成功 task:${task.id},job:${task.jobId},account:${task.accountId}`);
+            this.ctx.logger.error(
+              `点赞成功 task:${task.id},job:${task.jobId},account:${
+                task.accountId
+              },like:${likenum}`,
+            );
             // 更新当前task状态
             await DribbbleTask.findOneAndUpdate(
               { _id: { $eq: task._id } },
               {
-                action: ['like'],
-                status: 1,
-                totalTime: Math.ceil((new Date().getTime() - start) / 1000), // 任务耗时（单位：秒）
-              }
+                $set: {
+                  action: ['like'],
+                  status: 1,
+                  totalTime: Math.ceil((new Date().getTime() - start) / 1000), // 任务耗时（单位：秒）
+                },
+              },
             );
 
             // 更新job信息
@@ -189,16 +202,20 @@ export default class DribbbleService extends Service {
               },
               {
                 $inc: { processed: 1 },
-                likes: likenum,
+                $set: { likes: likenum },
               },
             );
           } else {
-            this.ctx.logger.error(`点赞失败 task:${task.id},job:${task.jobId},account:${task.accountId}`);
+            this.ctx.logger.error(
+              `点赞失败 task:${task.id},job:${task.jobId},account:${
+                task.accountId
+              }`,
+            );
           }
         }
       }
     } else {
-      this.ctx.logger.info('当前没有任务需要执行');
+      // this.ctx.logger.info('当前没有任务需要执行');
     }
   }
 
@@ -211,7 +228,7 @@ export default class DribbbleService extends Service {
     const { DribbbleAccount } = this.ctx.model;
     const accounts = await DribbbleAccount.find(
       { status: { $eq: 0 } },
-      { account: 1, password: 1 }
+      { account: 1, password: 1 },
     );
     if (accounts && accounts.length > 0) {
       this.fillAccountInfo(accounts);
