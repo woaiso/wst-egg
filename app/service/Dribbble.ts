@@ -153,15 +153,17 @@ export default class DribbbleService extends Service {
     const { DribbbleTask, DribbbleAccount, DribbbleJob } = this.ctx.model;
     // 查询当前时间+5分钟以前的所有未执行的任务
     const time = addMilliseconds(new Date(), 5 * 60 * 1000) as Date;
+    // 查询出需要被执行的任务，同时将任务状态设置为等待执行中
     const tasks = await DribbbleTask.find({
       startTime: { $lt: time },
       status: { $eq: 0 },
     });
     if (tasks && tasks.length > 0) {
+      for (const task of tasks) {
+        await DribbbleTask.updateOne({_id: {$eq: task._id}}, { status: 2 });
+      }
       this.ctx.logger.info(
-        `本次共执行(${tasks.length}):${tasks
-          .map((item) => item.id.id)
-          .toString()}`,
+        `本次共执行(${tasks.length}):${tasks.map((item) => item.id).toString()}`,
       );
       for (const task of tasks) {
         // 查询出账号信息，查询出任务信息，然后操作
