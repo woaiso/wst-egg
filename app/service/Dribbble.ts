@@ -20,7 +20,7 @@ export default class DribbbleService extends Service {
       // 排查当前账号是否已存在数据库
       if (!(await this.findDribbbleAccountByAccount(account.account))) {
         account.id = await this.ctx.service.counter.getNextSequence(
-          'dribbble_account',
+          'dribbble_account'
         );
         try {
           const result = await this.ctx.model.DribbbleAccount.create(account);
@@ -54,7 +54,7 @@ export default class DribbbleService extends Service {
     const errorQueue = [] as any[];
     for (const account of accounts) {
       const result = await this.ctx.service.worker.dribbble.getUserInfo(
-        account,
+        account
       );
       if (result) {
         successQueue.push(result);
@@ -134,7 +134,7 @@ export default class DribbbleService extends Service {
           accountId: account.id,
           startTime: addMilliseconds(
             new Date(),
-            Math.ceil(stepMilSec * (i + 1)),
+            Math.ceil(stepMilSec * (i + 1))
           ),
         };
         await DribbbleTask.create(task);
@@ -142,7 +142,7 @@ export default class DribbbleService extends Service {
       // 更新任务信息
       await DribbbleJob.updateOne(
         { id: { $eq: dribbbleJob.id } },
-        { all: usableAccount.length },
+        { all: usableAccount.length }
       );
     } else {
       throw new Error('创建任务失败，请添加Dribbble账号后重试');
@@ -160,10 +160,10 @@ export default class DribbbleService extends Service {
     });
     if (tasks && tasks.length > 0) {
       for (const task of tasks) {
-        await DribbbleTask.updateOne({_id: {$eq: task._id}}, { status: 2 });
+        await DribbbleTask.updateOne({ _id: { $eq: task._id } }, { status: 2 });
       }
       this.ctx.logger.info(
-        `本次共执行(${tasks.length}):${tasks.map((item) => item.id).toString()}`,
+        `本次共执行(${tasks.length}):${tasks.map(item => item.id).toString()}`
       );
       for (const task of tasks) {
         // 查询出账号信息，查询出任务信息，然后操作
@@ -177,13 +177,13 @@ export default class DribbbleService extends Service {
           const start = new Date().getTime();
           const likenum = await this.ctx.service.worker.dribbble.like(
             account,
-            job,
+            job
           );
           if (likenum) {
             this.ctx.logger.error(
               `点赞成功 task:${task.id},job:${task.jobId},account:${
                 task.accountId
-              },like:${likenum}`,
+              },like:${likenum}`
             );
             // 更新当前task状态
             await DribbbleTask.findOneAndUpdate(
@@ -194,7 +194,7 @@ export default class DribbbleService extends Service {
                   status: 1,
                   totalTime: Math.ceil((new Date().getTime() - start) / 1000), // 任务耗时（单位：秒）
                 },
-              },
+              }
             );
 
             // 更新job信息
@@ -205,13 +205,13 @@ export default class DribbbleService extends Service {
               {
                 $inc: { processed: 1 },
                 $set: { likes: likenum },
-              },
+              }
             );
           } else {
             this.ctx.logger.error(
               `点赞失败 task:${task.id},job:${task.jobId},account:${
                 task.accountId
-              }`,
+              }`
             );
           }
         }
@@ -230,10 +230,19 @@ export default class DribbbleService extends Service {
     const { DribbbleAccount } = this.ctx.model;
     const accounts = await DribbbleAccount.find(
       { status: { $eq: 0 } },
-      { account: 1, password: 1 },
+      { account: 1, password: 1 }
     );
     if (accounts && accounts.length > 0) {
       this.fillAccountInfo(accounts);
     }
+  }
+
+  async bootstrap() {
+    // 1. 将状态为等待中的任务重置为未处理
+    const { DribbbleTask } = this.ctx.model;
+    await DribbbleTask.updateMany(
+      { status: { $eq: 2 } },
+      { status: 0 },
+    );
   }
 }
