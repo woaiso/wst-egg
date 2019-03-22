@@ -4,7 +4,6 @@ export default {
     cron: '*/10 * * * * *',
   },
   task: async (ctx) => {
-    // ctx.logger.info('run cron task');
     ctx.service.dribbble.execTask();
   },
 };
