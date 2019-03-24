@@ -174,6 +174,24 @@ export default class WorkerDribbble extends Service {
       }, reject);
     });
   }
+
+  async getAuthorInfo(authorName, credentials?: any) {
+    const headers = {} as any;
+    if (credentials) {
+      headers.cookie = createCookieStrForReques(credentials);
+    }
+    const url = `https://dribbble.com/${authorName.replace(/\s/g, '_')}`;
+    this.ctx.logger.info(`getAuthorInfo:${url}`);
+    const author = {} as any;
+    try {
+      const res = await request({ url,headers });
+      const html = res.data;
+      author.csrfToken = $.load(html)('meta[name=csrf-token]').attr('content');
+    } catch (e) {
+      this.ctx.logger.error(e);
+    }
+    return author;
+  }
   /**
    * 点赞操作
    * @param {DribbbleAccount} account 需要操作的用户信息
@@ -319,5 +337,50 @@ export default class WorkerDribbble extends Service {
       this.ctx.logger.error(e);
     }
     return user;
+  }
+
+  /**
+   * 关注作者
+   *
+   * @param {*} account
+   * @param {*} job
+   * @returns
+   * @memberof WorkerDribbble
+   */
+  async fllow(account, job) {
+    const { maker } = job;
+    let { credentials } = account;
+    const fllowUrl = `https://dribbble.com/${maker.replace(/\s/g, '_')}/followers`;
+    if (!credentials || credentials.length === 0) {
+      credentials = await this.getLoginCredentials(account);
+    }
+    // 先浏览页面获取到csrfToken
+    const authorInfo = await this.getAuthorInfo(maker, credentials);
+
+    this.ctx.logger.info('获取Author信息', JSON.stringify(authorInfo));
+
+    const headers = {
+      accept: '*/*',
+      'accept-encoding': 'gzip, deflate, br',
+      'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7',
+      'cache-control': 'no-cache',
+      'content-length': 0,
+      referer: `https://dribbble.com/${maker.replace(/\s/g, '_')}`,
+      origin: 'https://dribbble.com',
+      'x-requested-with': 'XMLHttpRequest',
+      'x-csrf-token': authorInfo.csrfToken,
+      cookie: createCookieStrForReques(credentials),
+    };
+    try {
+      const ret = await request({ url: fllowUrl, method: 'POST', headers });
+      if(+ret.status === 201) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      this.ctx.logger.error(e);
+    }
+    return 0;
   }
 }
