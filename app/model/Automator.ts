@@ -44,6 +44,10 @@ export default (app: Application) => {
     remark: {
       type: String,
     },
+    // 系统启动时间点
+    systemStartAt: {
+      type: Date,
+    },
     createAt: {
       type: Date,
       required: false,

@@ -1,5 +1,8 @@
 // 自动化工具
 
+import { distanceInWords } from 'date-fns';
+import * as zh_CN from 'date-fns/locale/zh_cn';
+
 import BaseController from './base';
 
 export default class AutomatorController extends BaseController {
@@ -8,12 +11,19 @@ export default class AutomatorController extends BaseController {
     const { name } = ctx.query;
     try {
       const automatorInfo = await ctx.service.automator.findAutomatorInfoByName(
-        name,
+        name
       );
       // 查询其他信息
       if (automatorInfo) {
         const data = automatorInfo as any;
-        data.running = '3天24小时';
+        try {
+          data.running = distanceInWords(data.systemStartAt, new Date(), {
+            includeSeconds: true,
+            locale: zh_CN,
+          });
+        } catch (e) {
+          console.error(e);
+        }
         data.completeJobs = await ctx.model.DribbbleTask.count({
           status: { $eq: 1 },
         });

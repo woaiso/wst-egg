@@ -9,7 +9,9 @@ export default class AutomatorService extends Service {
    * @param automatorName 自动化工具名称
    */
   async findAutomatorInfoByName(automatorName: string) {
-    return this.ctx.model.Automator.findOne({ name: { $eq: automatorName } }).lean(true);
+    return this.ctx.model.Automator.findOne({
+      name: { $eq: automatorName },
+    }).lean(true);
   }
   /**
    * 插入一条自动化工具
@@ -31,5 +33,17 @@ export default class AutomatorService extends Service {
     return this.ctx.model.Automator.findOne({
       name: { $eq: automatorName },
     }).count();
+  }
+
+  async updateAutomatorInfoByName(automatorName) {
+    this.ctx.logger.info('系统启动');
+    // 更新启动时间
+    await this.ctx.model.Automator.findOneAndUpdate(
+      { name: { $eq: automatorName } },
+      {
+        systemStartAt: new Date(),
+      },
+      { upsert: true, new: true },
+    );
   }
 }

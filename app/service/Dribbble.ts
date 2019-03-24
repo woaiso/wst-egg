@@ -1,4 +1,4 @@
-import * as addMilliseconds from '@bit/date-fns.date-fns.add-milliseconds';
+import { addMilliseconds } from 'date-fns';
 
 import { Service } from 'egg';
 import { sleep } from '../utils';
