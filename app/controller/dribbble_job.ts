@@ -50,11 +50,15 @@ export default class DribbbleJobController extends BaseController {
     const list = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
     const count = await ctx.model.DribbbleJob.find().count();
     const compelte = list.filter((item) => item.processed === item.all).length;
+    const avgs = await ctx.model.DribbbleTask.aggregate([
+      { $group: { _id: '$status', averageTime: { $avg: '$totalTime' } } },
+    ]);
+    const averageTime = avgs.filter((item) => item._id === 1)[0].averageTime.toFixed(2);
     // 计算有多少任务已经完成
     return this.json({
       inProcessing: count - compelte,
       compelte,
-      averageTime: '4秒',
+      averageTime: `${averageTime}秒`,
       list,
     });
   }
