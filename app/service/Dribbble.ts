@@ -223,6 +223,20 @@ export default class DribbbleService extends Service {
       // this.ctx.logger.info('当前没有任务需要执行');
     }
   }
+  /**
+   * 删除任务
+   *
+   * @param {Number} jobId 任务ID
+   * @memberof DribbbleService
+   */
+  async deleteJob(jobId: number) {
+    // 将任务状态修改为删除状态
+    const { DribbbleJob, DribbbleTask } = this.ctx.model;
+    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: 9 });
+
+    // 更新所有的任务状态为删除状态
+    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: 9 });
+  }
 
   /**
    * 查询未初始化的账户，进行初始化登录

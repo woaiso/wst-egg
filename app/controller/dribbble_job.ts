@@ -47,13 +47,17 @@ export default class DribbbleJobController extends BaseController {
 
   async index() {
     const { ctx } = this;
-    const list = await ctx.model.DribbbleJob.find().sort({ createAt: 'desc' });
+    const list = await ctx.model.DribbbleJob.find({ status: { $eq: 1 } }).sort({
+      createAt: 'desc',
+    });
     const count = await ctx.model.DribbbleJob.find().count();
-    const compelte = list.filter((item) => item.processed === item.all).length;
+    const compelte = list.filter(item => item.processed === item.all).length;
     const avgs = await ctx.model.DribbbleTask.aggregate([
       { $group: { _id: '$status', averageTime: { $avg: '$totalTime' } } },
     ]);
-    const averageTime = avgs.filter((item) => item._id === 1)[0].averageTime.toFixed(2);
+    const averageTime = avgs
+      .filter(item => item._id === 1)[0]
+      .averageTime.toFixed(2);
     // 计算有多少任务已经完成
     return this.json({
       inProcessing: count - compelte,
@@ -67,5 +71,16 @@ export default class DribbbleJobController extends BaseController {
     const { ctx } = this;
     await ctx.service.dribbble.execTask();
     ctx.body = '完成';
+  }
+
+  /**
+   * 删除任务
+   *
+   * @memberof DribbbleJobController
+   */
+  async delete() {
+    const { ctx } = this;
+    const { id } = ctx.request.body;
+    await ctx.service.dribbble.deleteJob(id);
   }
 }

@@ -18,6 +18,11 @@ export default (app: Application) => {
           '请输入正确的dribbble url example：https://dribbble.com/shots/6160500-Card-Paginator-Component',
       },
     },
+    // 状态
+    status: {
+      type: Number,
+      default: 1,
+    },
     // 多少小时内完成任务
     timeRange: {
       type: Number,
