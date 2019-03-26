@@ -78,7 +78,7 @@ export default class DribbbleJobController extends BaseController {
    *
    * @memberof DribbbleJobController
    */
-  async delete() {
+  async destroy() {
     const { ctx } = this;
     const { id } = ctx.request.body;
     await ctx.service.dribbble.deleteJob(id);
