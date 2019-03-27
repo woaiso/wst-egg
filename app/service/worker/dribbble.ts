@@ -212,6 +212,9 @@ export default class WorkerDribbble extends Service {
     }
     // 先浏览页面获取到csrfToken
     const shotInfo = await this.getShotInfo(source, credentials);
+    if(!shotId){
+      return 0;
+    }
 
     this.ctx.logger.info('获取Shot信息', JSON.stringify(shotInfo));
     const headers = {
@@ -223,7 +226,7 @@ export default class WorkerDribbble extends Service {
       referer: source,
       origin: 'https://dribbble.com',
       'x-requested-with': 'XMLHttpRequest',
-      'x-csrf-token': shotInfo.csrfToken,
+      'x-csrf-token': shotInfo ? shotInfo.csrfToken : '',
       cookie: createCookieStrForReques(credentials),
     };
     try {
@@ -377,12 +380,13 @@ export default class WorkerDribbble extends Service {
     try {
       const ret = await request({ url: fllowUrl, method: 'POST', headers });
       if (+ret.status === 201) {
+        this.ctx.logger.info(`fllow 成功 ${fllowUrl}`);
         return 1;
       } else {
-        return 0;
+        this.ctx.logger.info(`fllow 失败 ${fllowUrl}`);
       }
     } catch (e) {
-      this.ctx.logger.error(e);
+      this.ctx.logger.info(`fllow 失败 ${fllowUrl} -  ${e.message}`);
     }
     return 0;
   }
