@@ -17,7 +17,7 @@ export default (app: Application) => {
   router.post('/automator/create', controller.automator.create);
 
   router.post('/dribbble_job/create', controller.dribbbleJob.create);
-  router.post('/dribbble_job/list', controller.dribbbleJob.list);
+  router.get('/dribbble_job/list', controller.dribbbleJob.list);
   router.post('/dribbble_job/update', controller.dribbbleJob.update);
 
   router.post('/dribbble_task/list', controller.dribbble.fetchDribbbleTask);

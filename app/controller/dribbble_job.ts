@@ -48,10 +48,14 @@ export default class DribbbleJobController extends BaseController {
 
   public async list() {
     const { ctx } = this;
-    const list = await ctx.model.DribbbleJob.find({ status: { $eq: DRIBBBLE_JOB.NOMAL } }).sort({
+    const list = await ctx.model.DribbbleJob.find({
+      status: { $in: [DRIBBBLE_JOB.NOMAL, DRIBBBLE_JOB.PAUSED] },
+    }).sort({
       createAt: 'desc',
     });
-    const count = await ctx.model.DribbbleJob.find({ status: { $eq: DRIBBBLE_JOB.NOMAL } }).count();
+    const count = await ctx.model.DribbbleJob.find({
+      status: { $in: [DRIBBBLE_JOB.NOMAL, DRIBBBLE_JOB.PAUSED] },
+    }).count();
     const compelte = list.filter(item => item.processed === item.all).length;
     const avgs = await ctx.model.DribbbleTask.aggregate([
       { $group: { _id: '$status', averageTime: { $avg: '$totalTime' } } },
@@ -86,6 +90,13 @@ export default class DribbbleJobController extends BaseController {
       const ret = await ctx.service.dribbble.pauseJob(id);
       if (ret) {
         return this.success('暂停成功');
+      } else {
+        return this.error('暂停失败');
+      }
+    } else if(action === 'resume') {
+      const ret = await ctx.service.dribbble.resumeJob(id);
+      if (ret) {
+        return this.success('恢复成功');
       } else {
         return this.error('暂停失败');
       }

@@ -233,10 +233,16 @@ export default class DribbbleService extends Service {
   async deleteJob(jobId: number) {
     // 将任务状态修改为删除状态
     const { DribbbleJob, DribbbleTask } = this.ctx.model;
-    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: DRIBBBLE_JOB.DELETED });
+    await DribbbleJob.updateOne(
+      { id: { $eq: jobId } },
+      { status: DRIBBBLE_JOB.DELETED }
+    );
 
     // 更新所有的任务状态为删除状态
-    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: DRIBBBLE_TASK.DELETED });
+    await DribbbleTask.updateMany(
+      { jobId: { $eq: jobId } },
+      { status: DRIBBBLE_TASK.DELETED }
+    );
     return true;
   }
 
@@ -249,10 +255,40 @@ export default class DribbbleService extends Service {
   public async pauseJob(jobId: number) {
     // 将任务状态修改为暂停状态
     const { DribbbleJob, DribbbleTask } = this.ctx.model;
-    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: DRIBBBLE_JOB.PAUSED });
+    await DribbbleJob.updateOne(
+      { id: { $eq: jobId } },
+      { status: DRIBBBLE_JOB.PAUSED }
+    );
 
-    // 更新所有的任务状态为删除状态
-    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: DRIBBBLE_TASK.PAUSED });
+    // 更新所有的任务状态为暂停状态
+    await DribbbleTask.updateMany(
+      {
+        jobId: { $eq: jobId },
+        status: { $in: [DRIBBBLE_TASK.NOT_INITIAL, DRIBBBLE_TASK.IN_QUEUE] },
+      },
+      { status: DRIBBBLE_TASK.PAUSED }
+    );
+    return true;
+  }
+
+  /**
+   * 恢复任务
+   *
+   * @param {Number} jobId 任务ID
+   * @memberof DribbbleService
+   */
+  public async resumeJob(jobId: number) {
+    // 将任务状态修改为正常状态
+    const { DribbbleJob, DribbbleTask } = this.ctx.model;
+    await DribbbleJob.updateOne(
+      { id: { $eq: jobId } },
+      { status: DRIBBBLE_JOB.NOMAL }
+    );
+    // 更新所有的任务状态为正常状态
+    await DribbbleTask.updateMany(
+      { jobId: { $eq: jobId }, status: { $in: [DRIBBBLE_TASK.PAUSED] } },
+      { status: DRIBBBLE_TASK.NOT_INITIAL }
+    );
     return true;
   }
 
