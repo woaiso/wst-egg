@@ -113,66 +113,66 @@ export default class WorkerDribbble extends Service {
    * 获取作品的详细信息
    * @param {string} shotUrl 作品URL
    */
-  async getShotInfo(shotUrl, credentials?: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const headers = {} as any;
-      if (credentials) {
-        headers.cookie = createCookieStrForReques(credentials);
-      }
-      request({
+  async getShotInfo(shotUrl, credentials?: any) {
+    const headers = {} as any;
+    if (credentials) {
+      headers.cookie = createCookieStrForReques(credentials);
+    }
+    try {
+      const res = await request({
         url: shotUrl,
         headers,
-      }).then(res => {
-        const html = res.data;
-        const dom = $(html);
-        const csrfToken = $.load(html)('meta[name=csrf-token]').attr('content');
-        const maker = dom
-          .find('span.shot-byline-user>a')
-          .text()
-          .trim();
-        const title = dom
-          .find('h1.shot-title')
-          .text()
-          .trim();
-        const description = dom
-          .find('div.shot-desc')
-          .text()
-          .trim();
-        const likes = dom
-          .find('div.shot-likes>a')
-          .text()
-          .trim()
-          .replace(/[^\d]/g, '');
-        const views = dom
-          .find('div.shot-views')
-          .children()
-          .remove()
-          .end()
-          .text()
-          .trim()
-          .replace(/[^\d]/g, '');
-        const saves = dom
-          .find('div.shot-saves>a')
-          .text()
-          .trim()
-          .replace(/[^\d]/g, '');
-        const thumb = dom.find('.detail-shot').attr('data-img-src');
-        if (csrfToken) {
-          resolve({
-            likes,
-            views,
-            saves,
-            csrfToken,
-            title,
-            description,
-            maker,
-            thumb,
-          });
-        } else {
-          reject('未获取到csrfToken');
-        }
-      }, reject);
-    });
+      });
+      const html = res.data;
+      const dom = $(html);
+      const csrfToken = $.load(html)('meta[name=csrf-token]').attr('content');
+      const maker = dom
+        .find('span.shot-byline-user>a')
+        .text()
+        .trim();
+      const title = dom
+        .find('h1.shot-title')
+        .text()
+        .trim();
+      const description = dom
+        .find('div.shot-desc')
+        .text()
+        .trim();
+      const likes = dom
+        .find('div.shot-likes>a')
+        .text()
+        .trim()
+        .replace(/[^\d]/g, '');
+      const views = dom
+        .find('div.shot-views')
+        .children()
+        .remove()
+        .end()
+        .text()
+        .trim()
+        .replace(/[^\d]/g, '');
+      const saves = dom
+        .find('div.shot-saves>a')
+        .text()
+        .trim()
+        .replace(/[^\d]/g, '');
+      const thumb = dom.find('.detail-shot').attr('data-img-src');
+      if (csrfToken) {
+        return {
+          likes,
+          views,
+          saves,
+          csrfToken,
+          title,
+          description,
+          maker,
+          thumb,
+        };
+      }
+    } catch (e) {
+      this.ctx.logger.error(e);
+    }
+    return null;
   }
 
   async getAuthorInfo(authorName, credentials?: any) {
@@ -184,7 +184,7 @@ export default class WorkerDribbble extends Service {
     this.ctx.logger.info(`getAuthorInfo:${url}`);
     const author = {} as any;
     try {
-      const res = await request({ url,headers });
+      const res = await request({ url, headers });
       const html = res.data;
       author.csrfToken = $.load(html)('meta[name=csrf-token]').attr('content');
     } catch (e) {
@@ -350,7 +350,10 @@ export default class WorkerDribbble extends Service {
   async fllow(account, job) {
     const { maker } = job;
     let { credentials } = account;
-    const fllowUrl = `https://dribbble.com/${maker.replace(/\s/g, '_')}/followers`;
+    const fllowUrl = `https://dribbble.com/${maker.replace(
+      /\s/g,
+      '_'
+    )}/followers`;
     if (!credentials || credentials.length === 0) {
       credentials = await this.getLoginCredentials(account);
     }
@@ -373,7 +376,7 @@ export default class WorkerDribbble extends Service {
     };
     try {
       const ret = await request({ url: fllowUrl, method: 'POST', headers });
-      if(+ret.status === 201) {
+      if (+ret.status === 201) {
         return 1;
       } else {
         return 0;

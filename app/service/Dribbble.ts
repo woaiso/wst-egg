@@ -102,8 +102,9 @@ export default class DribbbleService extends Service {
     return this.ctx.model.DribbbleJob.create(job);
   }
 
+  // 查询是否存在一个正常状态的任务
   async findJobBySource(source) {
-    return this.ctx.model.DribbbleJob.findOne({ source: { $eq: source } });
+    return this.ctx.model.DribbbleJob.findOne({ source: { $eq: source }, status:{$eq: DRIBBBLE_JOB.NOMAL} });
   }
 
   /**
