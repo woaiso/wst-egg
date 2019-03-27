@@ -1,6 +1,7 @@
-import { addMilliseconds } from 'date-fns';
+import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../../constants/status';
 
 import { Service } from 'egg';
+import { addMilliseconds } from 'date-fns';
 import { sleep } from '../utils';
 
 export default class DribbbleService extends Service {
@@ -232,10 +233,27 @@ export default class DribbbleService extends Service {
   async deleteJob(jobId: number) {
     // 将任务状态修改为删除状态
     const { DribbbleJob, DribbbleTask } = this.ctx.model;
-    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: 9 });
+    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: DRIBBBLE_JOB.DELETED });
 
     // 更新所有的任务状态为删除状态
-    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: 9 });
+    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: DRIBBBLE_TASK.DELETED });
+    return true;
+  }
+
+  /**
+   * 暂停任务
+   *
+   * @param {Number} jobId 任务ID
+   * @memberof DribbbleService
+   */
+  public async pauseJob(jobId: number) {
+    // 将任务状态修改为暂停状态
+    const { DribbbleJob, DribbbleTask } = this.ctx.model;
+    await DribbbleJob.updateOne({ id: { $eq: jobId } }, { status: DRIBBBLE_JOB.PAUSED });
+
+    // 更新所有的任务状态为删除状态
+    await DribbbleTask.updateMany({ jobId: { $eq: jobId } }, { status: DRIBBBLE_TASK.PAUSED });
+    return true;
   }
 
   /**

@@ -3,7 +3,7 @@
 import BaseController from './base';
 
 export default class DribbbleJobController extends BaseController {
-  async create() {
+  public async create() {
     const { ctx } = this;
     const postParams = ctx.request.body;
     // 对参数做一些处理
@@ -45,7 +45,7 @@ export default class DribbbleJobController extends BaseController {
     }
   }
 
-  async index() {
+  public async list() {
     const { ctx } = this;
     const list = await ctx.model.DribbbleJob.find({ status: { $eq: 1 } }).sort({
       createAt: 'desc',
@@ -78,9 +78,25 @@ export default class DribbbleJobController extends BaseController {
    *
    * @memberof DribbbleJobController
    */
-  async destroy() {
+  async update() {
     const { ctx } = this;
-    const { id } = ctx.request.body;
-    await ctx.service.dribbble.deleteJob(id);
+    const { action, id } = ctx.request.body;
+    if (action === 'pause') {
+      const ret = await ctx.service.dribbble.pauseJob(id);
+      if (ret) {
+        return this.success('暂停成功');
+      } else {
+        return this.error('暂停失败');
+      }
+    } else if (action === 'delete') {
+      const ret = await ctx.service.dribbble.deleteJob(id);
+      if (ret) {
+        return this.success('删除成功');
+      } else {
+        return this.error('删除失败');
+      }
+    } else {
+      return this.error('参数错误');
+    }
   }
 }

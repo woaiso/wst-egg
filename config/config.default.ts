@@ -32,7 +32,7 @@ export default (appInfo: EggAppConfig) => {
 
   config.jwt = {
     jwtSecret: 'woaiso-local-secret',
-    jwtExpire: '14 days',
+    jwtExpire: '1 days',
     WhiteList: ['UserLogin'],
   };
 
