@@ -18,3 +18,5 @@ app/**/*.map
 test/**/*.map
 config/**/*.map
 typings
+
+dist/
