@@ -1,3 +1,4 @@
+import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../../constants/status';
 // 自动化工具
 
 import BaseController from './base';
@@ -47,16 +48,16 @@ export default class DribbbleJobController extends BaseController {
 
   public async list() {
     const { ctx } = this;
-    const list = await ctx.model.DribbbleJob.find({ status: { $eq: 1 } }).sort({
+    const list = await ctx.model.DribbbleJob.find({ status: { $eq: DRIBBBLE_JOB.NOMAL } }).sort({
       createAt: 'desc',
     });
-    const count = await ctx.model.DribbbleJob.find().count();
+    const count = await ctx.model.DribbbleJob.find({ status: { $eq: DRIBBBLE_JOB.NOMAL } }).count();
     const compelte = list.filter(item => item.processed === item.all).length;
     const avgs = await ctx.model.DribbbleTask.aggregate([
       { $group: { _id: '$status', averageTime: { $avg: '$totalTime' } } },
     ]);
     const averageTime = avgs
-      .filter(item => item._id === 1)[0]
+      .filter(item => item._id === DRIBBBLE_TASK.PROCESSED)[0]
       .averageTime.toFixed(2);
     // 计算有多少任务已经完成
     return this.json({
