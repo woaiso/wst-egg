@@ -1,14 +1,14 @@
-# hackernews-async-ts
+# wst-egg
 
-[Hacker News](https://news.ycombinator.com/) showcase using typescript && egg
+woaiso backend service
 
 ## QuickStart
 
 ### Development
 
 ```bash
-$ npm i
-$ npm run dev
+$ yarn
+$ yarn run dev
 $ open http://localhost:7001/
 ```
 
