@@ -7,6 +7,7 @@ import ExportCounter from '../../../app/service/Counter';
 import ExportDribbble from '../../../app/service/Dribbble';
 import ExportSystem from '../../../app/service/System';
 import ExportUser from '../../../app/service/User';
+import ExportCrawlerBase from '../../../app/service/crawler/base';
 import ExportWorkerDribbble from '../../../app/service/worker/dribbble';
 
 declare module 'egg' {
@@ -16,6 +17,9 @@ declare module 'egg' {
     dribbble: ExportDribbble;
     system: ExportSystem;
     user: ExportUser;
+    crawler: {
+      base: ExportCrawlerBase;
+    }
     worker: {
       dribbble: ExportWorkerDribbble;
     }
