@@ -42,7 +42,7 @@ export default (appInfo: EggAppConfig) => {
   };
 
   config.mongoose = {
-    url: 'mongodb://127.0.0.1:27017/wst',
+    url: process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/wst',
     options: {
       autoReconnect: true, // 自动连接
       reconnectTries: Number.MAX_VALUE, // 尝试重试连接:js最大值

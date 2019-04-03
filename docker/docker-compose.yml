@@ -1,24 +1,33 @@
 version: "3"
 services:
 
-  app:
-    container_name: app
-    restart: always
+  backend_service:
+    container_name: backend_service
     build: ../
     ports:
-      - "7001:7001"
+      - 7001:7001
     links:
       - mongo
+    environment:
+      - PORT=7001
+      - MONGO_URL= mongodb://mongo:27017/wst
+
   mongo:
     container_name: mongo
     image: mongo
     volumes:
       - ./data:/data/db
     ports:
-      - "27017:27017"
+      - 27017:27017
+
   nginx:
       container_name: nginx
+      depends_on:
+        - mongo
+        - backend_service
       build: ./nginx
+      links:
+        - backend_service
       ports:
         - "80:80"
         - "443:443"
