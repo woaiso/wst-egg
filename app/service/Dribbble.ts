@@ -1,4 +1,4 @@
-import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../../constants/status';
+import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../constants/status';
 
 import { Service } from 'egg';
 import { addMilliseconds } from 'date-fns';

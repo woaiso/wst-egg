@@ -1,4 +1,4 @@
-import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../../constants/status';
+import { DRIBBBLE_JOB, DRIBBBLE_TASK } from './../constants/status';
 // 自动化工具
 
 import BaseController from './base';
