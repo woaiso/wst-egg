@@ -9,10 +9,10 @@ RUN mkdir -p /usr/src/app
 
 RUN apk add --no-cache bash
 
-COPY app config typings package.json tsconfig.json yarn.lock /usr/src/app/
+COPY . /usr/src/app/
 
 WORKDIR /usr/src/app
 
-RUN npm install -g yarn && yarn && yarn run tsc
+RUN npm install -g yarn && yarn install --production
 EXPOSE 7001
 CMD [ "yarn", "run", "start:docker" ]
