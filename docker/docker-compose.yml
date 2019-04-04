@@ -1,6 +1,5 @@
-version: "3.5"
+version: '3.5'
 services:
-
   api:
     container_name: api-service
     build: ../dist
@@ -15,22 +14,20 @@ services:
 
   mongodb:
     container_name: api-mongodb
-    restart: always
     image: mongo
     volumes:
-      - ./data:/data/db
+      - /data:/data/db
     ports:
       - 27017:27017
 
   nginx:
-      container_name: nginx
-      depends_on:
-        - mongodb
-        - api
-      build: ./nginx
-      links:
-        - api
-      ports:
-        - "80:80"
-        - "443:443"
-      
+    container_name: nginx
+    depends_on:
+      - mongodb
+      - api
+    build: ./nginx
+    links:
+      - api
+    ports:
+      - '80:80'
+      - '443:443'
