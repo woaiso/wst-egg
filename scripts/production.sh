@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-cd ..
 
 # clean build cache
 rm -rf dist
