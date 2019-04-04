@@ -20,5 +20,3 @@ export default class BaseCrawler {
     c.queue('https://dribbble.com/shots');
   }
 }
-
-new BaseCrawler().fetch();
