@@ -7,7 +7,7 @@ rm -rf dist
 # build typescript
 npm run tsc
 
-cp -r  package.json Dockerfile scripts dist
+cp -r  package.json Dockerfile scripts yarn.lock dist
 
 cd docker
 
