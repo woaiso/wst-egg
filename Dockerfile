@@ -13,6 +13,6 @@ COPY . /usr/src/app/
 
 WORKDIR /usr/src/app
 
-RUN npm install -g yarn && yarn install --production
+RUN npm install -g yarn && yarn install && yarn run tsc
 EXPOSE 7001
 CMD [ "yarn", "run", "start:docker" ]

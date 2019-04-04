@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-
 # clean build cache
 rm -rf dist
 
 # build typescript
 npm run tsc
 
-cp -r  package.json Dockerfile scripts yarn.lock dist
+cp -r  package.json Dockerfile scripts typings yarn.lock tsconfig dist
 
 cd docker
 
