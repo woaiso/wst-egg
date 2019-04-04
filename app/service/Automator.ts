@@ -43,7 +43,6 @@ export default class AutomatorService extends Service {
       {
         systemStartAt: new Date(),
       },
-      { upsert: true, new: true },
     );
   }
 }
