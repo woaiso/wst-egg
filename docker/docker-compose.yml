@@ -16,7 +16,7 @@ services:
     container_name: api-mongodb
     image: mongo
     volumes:
-      - /data:/data/db
+      - ./data:/data/db
     ports:
       - 27017:27017
 
