@@ -22,10 +22,10 @@ services:
 
   nginx:
     container_name: nginx
+    image: woaiso/docker-tengine
     depends_on:
       - mongodb
       - api
-    build: ./nginx
     links:
       - api
     ports:
