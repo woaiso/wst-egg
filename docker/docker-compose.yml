@@ -1,4 +1,4 @@
-version: "3.1"
+version: "3.5"
 services:
 
   api:
@@ -16,7 +16,7 @@ services:
   mongodb:
     container_name: api-mongodb
     restart: always
-    image: mvertes/alpine-mongo
+    image: mongo
     volumes:
       - ./data:/data/db
     ports:

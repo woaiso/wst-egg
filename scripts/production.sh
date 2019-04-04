@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+cd ..
 
 # clean build cache
 rm -rf dist
@@ -6,7 +8,7 @@ rm -rf dist
 # build typescript
 npm run tsc
 
-cp  package.json Dockerfile dist
+cp -r  package.json Dockerfile scripts dist
 
 cd docker
 
