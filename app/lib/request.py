@@ -3,10 +3,12 @@
 import os
 import re
 import pathlib
+import math
 import asyncio
 import xml.etree.cElementTree as ET
 import urllib.request
 
+home_dir = os.environ['HOME']
 
 class Blog:
     '这是一个博客数据收集脚本'
@@ -14,38 +16,58 @@ class Blog:
 
     downloads = []
 
-    def fetch(self, url):
+    blogName = ''
+
+    async def init(self, url):
         print('fetch:', url)
+        # 第一次请求获取总文章数量，用于计算请求次数
+        doc = await self.fetch(url)
+        total = int(doc.find('posts').get('total'))
+        print('total posts:', total)
+        # 计算出总页数
+        pages = math.ceil(float(total)/self._Blog__pageSize)
+        page = 1
+        while(page < pages):
+            url = url + '&start=' + str(page*self._Blog__pageSize)
+            await self.fetch(url)
+            page += 1
+
+    @asyncio.coroutine
+    async def fetch(self, url):
+        # 第一次请求获取总文章数量，用于计算请求次数
         with urllib.request.urlopen(url) as url:
             s = url.read()
         doc = ET.fromstring(s)
         self.extrac(doc)
         self.download()
+        return doc
 
     def extrac(self, doc):
         self.extracBlog(doc.find('tumblelog'))
-        total = int(doc.find('posts').get('total'))
-        print('total posts:', total, 'fetch:', len(doc.findall('posts/post')))
+        print('fetch:', len(doc.findall('posts/post')))
         for item in doc.iterfind('posts/post'):
             self.extracItem(item)
 
     def extracBlog(self, blog):
+        self.blogName = blog.get('name')
         print(blog.get('name'), blog.get('timezone'), blog.get('title'))
 
     def extracItem(self, item):
         type = item.get('type')
-        print(item.get('id'))
         if type == 'regular':  # 普通文本
-            print(item.find('regular-body').text)
+            body = item.find('regular-body')
+            if body:
+                # print(body.text)
+                1==1
         elif type == 'photo':  # 照片类
             desc = item.find('photo-caption')
             if desc is not None:
-                print(desc.text)
+                # print(desc.text)
+                1==1
             # 识别是否有多张图片
             photoset = item.find('photoset')
             if photoset:
                 # 多张图片处理逻辑
-                print('has photo ', len(photoset.findall('photo')))
                 for photo in photoset.iterfind('photo'):
                     photo_url = photo.find('photo-url').text
                     self.downloads.append(photo_url)
@@ -65,15 +87,26 @@ class Blog:
     def download(self):
         if len(self.downloads) > 0:
             while(len(self.downloads) > 0):
-                download_url = self.downloads.pop()
-                lpth = '~/photo/' + os.path.basename(download_url)
-                if not pathlib.Path(lpth):
-                    print('download:', download_url, 'to:', lpth)
-                    with urllib.request.urlopen(download_url) as web:
-                        with open(lpth, 'wb') as outfile:
-                            outfile.write(web.read())
+                try:
+                    download_url = self.downloads.pop()
+                    dir = home_dir+'/photo/' + self.blogName
+                    if not pathlib.Path(dir).exists():
+                        os.makedirs(dir)
+                    lpth = dir + '/' + os.path.basename(download_url)
+                    if not pathlib.Path(lpth).exists():
+                        print('download:', download_url, 'to:', lpth)
+                        with urllib.request.urlopen(download_url) as web:
+                            with open(lpth, 'wb') as outfile:
+                                outfile.write(web.read())
+                    else:
+                        print('file exsist ', lpth)
+                except:
+                    print('error')
                 else:
-                    print('file exsist ', lpth)
+                    1==1
 
 
-Blog().fetch(os.environ.get('EXAMPLE_URL'))
+loop = asyncio.get_event_loop()
+loop.run_until_complete(Blog().init(os.environ.get('EXAMPLE_URL')))
+
+
