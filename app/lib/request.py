@@ -10,6 +10,7 @@ import urllib.request
 
 home_dir = os.environ['HOME']
 
+
 class Blog:
     '这是一个博客数据收集脚本'
     __pageSize = 50
@@ -29,6 +30,8 @@ class Blog:
         page = 1
         while(page < pages):
             url = url + '&start=' + str(page*self._Blog__pageSize)
+            print('fetch:', str(page*self._Blog__pageSize), '-',
+                  str((page+1)*self._Blog__pageSize), 'of ', total, url)
             await self.fetch(url)
             page += 1
 
@@ -58,12 +61,12 @@ class Blog:
             body = item.find('regular-body')
             if body:
                 # print(body.text)
-                1==1
+                1 == 1
         elif type == 'photo':  # 照片类
             desc = item.find('photo-caption')
             if desc is not None:
                 # print(desc.text)
-                1==1
+                1 == 1
             # 识别是否有多张图片
             photoset = item.find('photoset')
             if photoset:
@@ -80,10 +83,18 @@ class Blog:
             result = re.search(
                 r'poster=\'(.*?)\'[\s\S]+duration\":(\d+)[\s\S]+source\ssrc=\"(.*?)\"', videostr, re.M | re.I)
             if result:
+                video_source = result.group(3)
+                if video_source:
+                    # 获取真实文件地址
+                    self.downloads.append(self.getRealVideoUrl(video_source))
                 print(result.group(1), result.group(2), result.group(3))
             else:
                 print('no match!')
-
+    def getRealVideoUrl(self, url):
+        print('video:', url)
+        res = urllib.request.urlopen(url)
+        print(res.info())
+        return res.info().headers['location']
     def download(self):
         if len(self.downloads) > 0:
             while(len(self.downloads) > 0):
@@ -103,10 +114,8 @@ class Blog:
                 except:
                     print('error')
                 else:
-                    1==1
+                    1 == 1
 
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(Blog().init(os.environ.get('EXAMPLE_URL')))
-
-
