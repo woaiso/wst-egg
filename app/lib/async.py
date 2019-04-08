@@ -19,7 +19,7 @@ watting_urls = []
 seen_urls = set()
 
 headers = {
-    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'
+    'user-agent': 'Googlebot'
 }
 
 async def fetch(url, session):
@@ -52,7 +52,7 @@ def extract_urls(source_url, html):
             '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri))
         if url and pattern.search(url) and url not in seen_urls: # 仅请求本站链接
             # 仅请求列表页和文章页
-            if re.search(r'(forumdisplay|thread|html_data)', url):
+            if re.search(r'(forumdisplay|htm_data)', url):
                 urls.append(url)
                 watting_urls.append(url)
     return urls
@@ -89,7 +89,7 @@ async def consumer(pool):
                 continue
             url = watting_urls.pop()
             if url not in seen_urls:
-                if re.search(r'thread', url):
+                if re.search(r'htm_data', url):
                     asyncio.ensure_future(article_handle(url, session, pool))
                 else:
                     asyncio.ensure_future(init_urls(url, session))
