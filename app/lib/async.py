@@ -83,13 +83,13 @@ async def article_handle(url, session, pool):
 async def consumer(pool):
     async with aiohttp.ClientSession() as session:
         while not stopping:
-            await asyncio.sleep(5) # 处理一次等待五秒
+            await asyncio.sleep(1) # 处理一次等待五秒
             if len(watting_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
                 continue
             url = watting_urls.pop()
             if url not in seen_urls:
-                if re.search(r'htm_data', url):
+                if re.search(r'htm_data[\s\S]+\.html', url):
                     asyncio.ensure_future(article_handle(url, session, pool))
                 else:
                     asyncio.ensure_future(init_urls(url, session))
