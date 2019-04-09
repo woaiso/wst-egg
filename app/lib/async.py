@@ -95,9 +95,19 @@ async def article_handle(url, session, pool):
     pq = PyQuery(html)
 
     # 开始解析文章数据
-    title = pq('meta[name=description]').attr('content')
-    print(title)
+    description = pq('meta[name=description]').attr('content')
+    title = pq('a#thread_subject').text()
+    view = int(pq('.pls .hm span:eq(1)').text())
+    reply = int(pq('.pls .hm span:eq(4)').text())
+    post_at = pq('em[id^=authorposton]:eq(0)').text().replace('发表于 ', '')
 
+    # 解析作者相关信息
+    author_link = pq('.authi:eq(0) > a').attr('href')
+    author_id = re.search(r'space-uid-(\d+)\.html', author_link).group(1)
+    author_name = pq('.authi:eq(0) > a').text()
+
+
+    print(title, view, reply, author_id, author_name, post_at)
 
 async def consumer(pool):
     async with aiohttp.ClientSession() as session:
