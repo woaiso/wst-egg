@@ -100,6 +100,14 @@ async def article_handle(url, session, pool):
     view = int(pq('.pls .hm span:eq(1)').text())
     reply = int(pq('.pls .hm span:eq(4)').text())
     post_at = pq('em[id^=authorposton]:eq(0)').text().replace('发表于 ', '')
+    post_id = pq('#postlist>div:eq(0)').attr('id').replace('post_', '')
+    # 解析图片
+    images = []
+    for img in pq('table#pid'+post_id+' .pcb img'):
+        src = PyQuery(img).attr('src')
+        full_photo_url = urljoin(url, src)
+        images.append(full_photo_url)
+        print(full_photo_url)
 
     # 解析作者相关信息
     author_link = pq('.authi:eq(0) > a').attr('href')
