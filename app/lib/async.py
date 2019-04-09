@@ -19,7 +19,7 @@ list_urls = []
 article_urls = []
 seen_urls = set()
 
-SLEEP_DURATION = 6e-2  #500ms
+SLEEP_DURATION = 3e-2  #500ms
 
 
 class Job:
