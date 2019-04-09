@@ -52,7 +52,7 @@ def extract_urls(source_url, html):
             '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri))
         if url and pattern.search(url) and url not in seen_urls: # 仅请求本站链接
             # 仅请求列表页和文章页
-            if re.search(r'(forumdisplay|htm_data)', url):
+            if re.search(r'(\/forumdisplay|\/htm_data|(\/forum-\d+-\d+)|(\/thread-\d+-\d+-\d+))', url):
                 urls.append(url)
                 watting_urls.append(url)
     return urls
@@ -82,14 +82,15 @@ async def article_handle(url, session, pool):
 
 async def consumer(pool):
     async with aiohttp.ClientSession() as session:
-        while not stopping:
+        while not stopping or len(seen_urls) <= 20:
             await asyncio.sleep(1) # 处理一次等待五秒
             if len(watting_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
                 continue
+            
             url = watting_urls.pop()
             if url not in seen_urls:
-                if re.search(r'htm_data[\s\S]+\.html', url):
+                if re.search(r'((\/htm_data[\s\S]+\.html)|(\/thread-\d+-\d+-\d+))', url):
                     asyncio.ensure_future(article_handle(url, session, pool))
                 else:
                     asyncio.ensure_future(init_urls(url, session))
