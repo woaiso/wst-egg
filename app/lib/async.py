@@ -19,6 +19,8 @@ list_urls = []
 article_urls = []
 seen_urls = set()
 
+SLEEP_DURATION = 6e-2  #500ms
+
 
 class Job:
     weight = 1  # 权重，数字越大越优先执行
@@ -76,21 +78,23 @@ def extract_urls(source_url, html):
 
 
 async def init_urls(url, session):
-    html = await fetch(url, session)
     seen_urls.add(url)
+    html = await fetch(url, session)
     extract_urls(url, html)
 
 # 解析文章
 
 
 async def article_handle(url, session, pool):
-    html = await fetch(url, session)
     seen_urls.add(url)
+    html = await fetch(url, session)
     extract_urls(url, html)
     if not html:
         print('document none {}'.format(url))
         return
     pq = PyQuery(html)
+
+    # 开始解析文章数据
     title = pq('title').text()
     print(title)
 
@@ -98,7 +102,7 @@ async def article_handle(url, session, pool):
 async def consumer(pool):
     async with aiohttp.ClientSession() as session:
         while not stopping:
-            await asyncio.sleep(1)  # 处理一次等待1秒
+            await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
             # 识别列表队列和文章队列是否还有内容
             if len(article_urls) == 0 and len(list_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
