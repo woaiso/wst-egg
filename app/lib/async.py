@@ -95,7 +95,7 @@ async def article_handle(url, session, pool):
     pq = PyQuery(html)
 
     # 开始解析文章数据
-    title = pq('title').text()
+    title = pq('meta[name=description]').attr('content')
     print(title)
 
 
