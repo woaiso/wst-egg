@@ -15,12 +15,22 @@ sem = asyncio.Semaphore(3)
 # 标记状态
 stopping = False
 start_url = os.environ.get('SEED_URL')
-watting_urls = []
+list_urls = []
+article_urls = []
 seen_urls = set()
+
+
+class Job:
+    weight = 1  # 权重，数字越大越优先执行
+    url = None
+    def __init__(self, weight, url):
+          self.weight = weight
+          self.url = url
 
 headers = {
     'user-agent': 'Googlebot'
 }
+
 
 async def fetch(url, session):
     print('fetch url:{}'.format(url))
@@ -50,11 +60,16 @@ def extract_urls(source_url, html):
         parsed_uri = urlparse(url)
         pattern = re.compile(
             '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri))
-        if url and pattern.search(url) and url not in seen_urls: # 仅请求本站链接
+        if url and pattern.search(url) and url not in seen_urls:  # 仅请求本站链接
             # 仅请求列表页和文章页
-            if re.search(r'(\/forumdisplay|\/htm_data|(\/forum-\d+-\d+)|(\/thread-\d+-\d+-\d+))', url):
+            # 列表页
+            if re.search(r'(\/forumdisplay|(\/forum-\d+-\d+))', url):
                 urls.append(url)
-                watting_urls.append(url)
+                list_urls.append(url)
+            # 文章页, 仅请求第一页
+            elif re.search(r'(\/htm_data|(\/thread-\d+-1-1))', url):
+                urls.append(url)
+                article_urls.append(url)
     return urls
 
 # 初始化解析
@@ -82,13 +97,17 @@ async def article_handle(url, session, pool):
 
 async def consumer(pool):
     async with aiohttp.ClientSession() as session:
-        while not stopping or len(seen_urls) <= 20:
-            await asyncio.sleep(1) # 处理一次等待五秒
-            if len(watting_urls) == 0:
+        while not stopping:
+            await asyncio.sleep(1)  # 处理一次等待1秒
+            # 识别列表队列和文章队列是否还有内容
+            if len(article_urls) == 0 and len(list_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
                 continue
-            
-            url = watting_urls.pop()
+            # 增加优先策略 优先处理文章URL，文章无再处理列表url
+            if len(article_urls) > 0:
+                url = article_urls.pop()
+            elif len(list_urls) > 0:
+                url = list_urls.pop()
             if url not in seen_urls:
                 if re.search(r'((\/htm_data[\s\S]+\.html)|(\/thread-\d+-\d+-\d+))', url):
                     asyncio.ensure_future(article_handle(url, session, pool))
