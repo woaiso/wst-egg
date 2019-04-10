@@ -34,9 +34,7 @@ async def fetch(url, session):
     async with sem:
         try:
             # 伪装IP
-            ip = '121.168.0.' + str(random.randint(0,255))
-            headers['X-Forwarded-For'] = ip# '121.168.0.' + str(random.randint(0,255))
-            print('fake ip', ip)
+            headers['X-Forwarded-For'] = '121.168.0.' + str(random.randint(0,255))
             async with session.get(url, headers=headers, proxy=proxy) as response:
                 # for key in response.headers:
                 #     print(key, ':',response.headers[key])
@@ -92,10 +90,6 @@ async def article_handle(url, session, pool):
         print('document none {}'.format(url))
         return
     pq = PyQuery(html)
-    if 1==1:
-        description = pq('meta[name=description]').attr('content')
-        print(description)
-        return
 
     # 开始解析文章数据
     description = pq('meta[name=description]').attr('content')
