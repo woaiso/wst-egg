@@ -6,6 +6,7 @@ import asyncio
 import aiohttp
 import os
 import re
+import random
 from pyquery import PyQuery
 from urllib.parse import urljoin
 from urllib.parse import urlparse
@@ -19,18 +20,12 @@ list_urls = []
 article_urls = []
 seen_urls = set()
 
-SLEEP_DURATION = 3e-2  #500ms
+SLEEP_DURATION = 2e-2 #500ms
 
-
-class Job:
-    weight = 1  # 权重，数字越大越优先执行
-    url = None
-    def __init__(self, weight, url):
-          self.weight = weight
-          self.url = url
+proxy = None #'http://127.0.0.1:1087'
 
 headers = {
-    'user-agent': 'Googlebot'
+    'User-Agent': 'Googlebot'
 }
 
 
@@ -38,7 +33,11 @@ async def fetch(url, session):
     print('fetch url:{}'.format(url))
     async with sem:
         try:
-            async with session.get(url, headers=headers) as response:
+            # 伪装IP
+            ip = '121.168.0.' + str(random.randint(0,255))
+            headers['X-Forwarded-For'] = ip# '121.168.0.' + str(random.randint(0,255))
+            print('fake ip', ip)
+            async with session.get(url, headers=headers, proxy=proxy) as response:
                 # for key in response.headers:
                 #     print(key, ':',response.headers[key])
                 if response.status in [200, 201]:
@@ -69,7 +68,7 @@ def extract_urls(source_url, html):
                 urls.append(url)
                 list_urls.append(url)
             # 文章页, 仅请求第一页
-            elif re.search(r'(\/htm_data|(\/thread-\d+-1-1))', url):
+            elif re.search(r'(\/htm_data|\/viewthread|(\/thread-\d+-1-1))', url):
                 urls.append(url)
                 article_urls.append(url)
     return urls
@@ -93,6 +92,10 @@ async def article_handle(url, session, pool):
         print('document none {}'.format(url))
         return
     pq = PyQuery(html)
+    if 1==1:
+        description = pq('meta[name=description]').attr('content')
+        print(description)
+        return
 
     # 开始解析文章数据
     description = pq('meta[name=description]').attr('content')
@@ -131,7 +134,7 @@ async def consumer(pool):
             elif len(list_urls) > 0:
                 url = list_urls.pop()
             if url not in seen_urls:
-                if re.search(r'((\/htm_data[\s\S]+\.html)|(\/thread-\d+-\d+-\d+))', url):
+                if re.search(r'((\/htm_data[\s\S]+\.html)|(\/viewthread)|(\/thread-\d+-\d+-\d+))', url):
                     asyncio.ensure_future(article_handle(url, session, pool))
                 else:
                     asyncio.ensure_future(init_urls(url, session))
