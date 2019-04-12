@@ -26,11 +26,6 @@ SLEEP_DURATION = 2e-2  # 200ms
 
 proxy = None  # 'http://127.0.0.1:1087'
 
-headers = {
-    'User-Agent': 'Googlebot'
-}
-
-
 async def fetch(url, session):
     async with semaphore:
         try:
