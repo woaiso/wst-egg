@@ -7,6 +7,7 @@ import math
 import asyncio
 import xml.etree.cElementTree as ET
 import urllib.request
+import download
 
 home_dir = os.environ['HOME']
 
@@ -42,7 +43,6 @@ class Blog:
             s = url.read()
         doc = ET.fromstring(s)
         self.extrac(doc)
-        self.download()
         return doc
 
     def extrac(self, doc):
@@ -73,11 +73,13 @@ class Blog:
                 # 多张图片处理逻辑
                 for photo in photoset.iterfind('photo'):
                     photo_url = photo.find('photo-url').text
-                    self.downloads.append(photo_url)
+                    download.add(photo_url)
+                    # self.downloads.append(photo_url)
             else:
                 # 单张图片处理逻辑
                 photo_url = item.find('photo-url').text
-                self.downloads.append(photo_url)
+                download.add(photo_url)
+                # self.downloads.append(photo_url)
         elif type == 'video':
             videostr = item.find('video-player').text
             result = re.search(
@@ -86,36 +88,17 @@ class Blog:
                 video_source = result.group(3)
                 if video_source:
                     # 获取真实文件地址
-                    self.downloads.append(self.getRealVideoUrl(video_source))
+                    download.add(self.getRealVideoUrl(video_source))
+                    # self.downloads.append(self.getRealVideoUrl(video_source))
                 print(result.group(1), result.group(2), result.group(3))
             else:
                 print('no match!')
+
     def getRealVideoUrl(self, url):
         print('video:', url)
         res = urllib.request.urlopen(url)
         print(res.info())
         return res.info().headers['location']
-    def download(self):
-        if len(self.downloads) > 0:
-            while(len(self.downloads) > 0):
-                try:
-                    download_url = self.downloads.pop()
-                    dir = home_dir+'/photo/' + self.blogName
-                    if not pathlib.Path(dir).exists():
-                        os.makedirs(dir)
-                    lpth = dir + '/' + os.path.basename(download_url)
-                    if not pathlib.Path(lpth).exists():
-                        print('download:', download_url, 'to:', lpth)
-                        with urllib.request.urlopen(download_url) as web:
-                            with open(lpth, 'wb') as outfile:
-                                outfile.write(web.read())
-                    else:
-                        print('file exsist ', lpth)
-                except:
-                    print('error')
-                else:
-                    1 == 1
-
-
 loop = asyncio.get_event_loop()
+download.init(loop)
 loop.run_until_complete(Blog().init(os.environ.get('EXAMPLE_URL')))
