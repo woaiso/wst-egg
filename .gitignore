@@ -23,3 +23,5 @@ dist/
 
 docker/data
 docker/nginx/data/www
+
+__pycache__
