@@ -11,9 +11,10 @@ import download
 import config
 from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
+from time import gmtime, strftime
 
 # 并发控制3
-sem = asyncio.Semaphore(3)
+semaphore = asyncio.Semaphore(10)
 # 标记状态
 stopping = False
 start_url = os.environ.get('SEED_URL')
@@ -21,9 +22,9 @@ list_urls = []
 article_urls = []
 seen_urls = set()
 
-SLEEP_DURATION = 2e-2 #200ms
+SLEEP_DURATION = 2e-2  # 200ms
 
-proxy = None #'http://127.0.0.1:1087'
+proxy = None  # 'http://127.0.0.1:1087'
 
 headers = {
     'User-Agent': 'Googlebot'
@@ -31,10 +32,10 @@ headers = {
 
 
 async def fetch(url, session):
-    print('fetch url:{}'.format(url))
-    async with sem:
+    async with semaphore:
         try:
             # 伪装IP
+            print('fetch url: {}'.format(url))
             async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
                 # for key in response.headers:
                 #     print(key, ':',response.headers[key])
@@ -53,7 +54,6 @@ def extract_urls(source_url, html):
         print('document none {}'.format(source_url))
         return
     pq = PyQuery(html)
-    print('add urls')
     for link in pq.items('a'):
         href = link.attr('href')
         url = urljoin(source_url, href)
@@ -63,13 +63,11 @@ def extract_urls(source_url, html):
         if url and pattern.search(url) and url not in seen_urls:  # 仅请求本站链接
             # 仅请求列表页和文章页
             # 列表页
-            if re.search(r'(\/forumdisplay^((?!(filter|sid)).)*$|(\/forum-\d+-\d+))', url):
-                print('add list: ', url)
+            if re.search(r'(\/forumdisplay[\s\S]+page=\d+|(\/forum-\d+-\d+))', url):
                 urls.append(url)
                 list_urls.append(url)
             # 文章页, 仅请求第一页
-            elif re.search(r'(\/htm_data|(\/viewthread[\s\S]+\&extra\=page\%3D1)|(\/thread-\d+-1-1))', url):
-                print('add article: ', url)
+            elif re.search(r'(\/htm_data|(\/viewthread[\s\S]+\&extra\=page\%3D\d+$)|(\/thread-\d+-1-1))', url):
                 urls.append(url)
                 article_urls.append(url)
     return urls
@@ -85,7 +83,7 @@ async def init_urls(url, session):
 # 解析文章
 
 
-async def article_handle(url, session, pool):
+async def article_handle(url, session):
     seen_urls.add(url)
     html = await fetch(url, session)
     extract_urls(url, html)
@@ -110,7 +108,6 @@ async def article_handle(url, session, pool):
         full_photo_url = urljoin(url, src)
         images.append(full_photo_url)
         download.add(full_photo_url)
-        print(full_photo_url)
 
     # 解析作者相关信息
     author_link = pq('.authi:eq(0) > a').attr('href')
@@ -120,9 +117,10 @@ async def article_handle(url, session, pool):
     author_name = pq('.authi:eq(0) > a').text()
 
     print('extract url: {}'.format(url))
-    print(document_title, title, view, reply, author_id, author_name, post_at)
+    print(title, view, reply, author_id, author_name, post_at)
 
-async def consumer(pool):
+
+async def consumer():
     async with aiohttp.ClientSession() as session:
         while not stopping:
             await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
@@ -137,20 +135,23 @@ async def consumer(pool):
                 url = list_urls.pop()
             if url not in seen_urls:
                 if re.search(r'((\/htm_data[\s\S]+\.html)|(\/viewthread\.php)|(\/thread-\d+-\d+-\d+))', url):
-                    asyncio.ensure_future(article_handle(url, session, pool))
+                    asyncio.ensure_future(article_handle(url, session))
                 else:
                     asyncio.ensure_future(init_urls(url, session))
 
 
-async def main(loop):
+async def main():
     async with aiohttp.ClientSession() as session:
         html = await fetch(start_url, session)
         seen_urls.add(start_url)
         extract_urls(start_url, html)
-    asyncio.ensure_future(consumer(loop))
+    asyncio.ensure_future(consumer())
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    asyncio.ensure_future(main(loop))
-    download.init(loop)
-    loop.run_forever()
+    try:
+        loop = asyncio.get_event_loop()
+        asyncio.ensure_future(main())
+        download.init(loop)
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
