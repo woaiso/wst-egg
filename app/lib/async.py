@@ -83,13 +83,21 @@ async def article_handle(url, session):
     seen_urls.add(url)
     result = await fetch(url, session)
     # 判断响应类型，使用不同的parser
+    content_type = result.get('headers').get('Content-Type')
+    if content_type.find('text/html') > -1:
+        return html_parser(url, result.get('data'))
+    elif content_type.find('text/xml') > -1:
+        return xml_parser(url, result.get('data'))
 
 
+def xml_parser(base_url, xml):
+    print('解析xml')
 
-    html = result.data
-    extract_urls(url, html)
+
+def html_parser(base_url, html):
+    extract_urls(base_url, html)
     if not html:
-        print('document none {}'.format(url))
+        print('document none {}'.format(base_url))
         return
     pq = PyQuery(html)
 
@@ -106,7 +114,7 @@ async def article_handle(url, session):
     images = []
     for img in pq('table#pid'+post_id+' .pcb img,.postmessage.firstpost img'):
         src = PyQuery(img).attr('src')
-        full_photo_url = urljoin(url, src)
+        full_photo_url = urljoin(base_url, src)
         images.append(full_photo_url)
         download.add(full_photo_url)
 
