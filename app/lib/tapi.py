@@ -48,24 +48,18 @@ def extract_post(blogs):
 
 def readBlog():
     blogs = r.smembers('blog')
-    count = 1
     print(len(blogs))
     for blog in blogs:
-        if count < 50:
-            count +=1
-            blog_dict = json.loads(blog)
-            print(blog_dict)
-            home_url = blog_dict.get('url')
-            async_task.add_article(home_url+'api/read?num=50')
-        else:
-            break
+        blog_dict = json.loads(blog)
+        home_url = blog_dict.get('url')
+        async_task.add_article(home_url+'api/read?num=50')
 
 
 if __name__ == '__main__':
     try:
+        # store_blog()
         readBlog()
         async_task.init()
     except KeyboardInterrupt:
         pass
-    # store_blog()
     
