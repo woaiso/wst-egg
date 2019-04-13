@@ -11,6 +11,7 @@ import urllib.request
 from urllib.parse import urlparse
 import download
 import config
+# import tapi
 
 home_dir = os.environ['HOME']
 
@@ -20,20 +21,19 @@ semaphore = asyncio.Semaphore(3)
 
 class Blog:
     '这是一个博客数据收集脚本'
-    __pageSize = 50
-
-    downloads = []
-
-    blogName = ''
 
     def extrac(self, base_url, doc):
-        self.extracBlog(base_url, doc.find('tumblelog'))
+        self.extracBlog(base_url, doc)
         for item in doc.iterfind('posts/post'):
             self.extracItem(base_url,item)
 
-    def extracBlog(self, base_url, blog):
-        self.blogName = blog.get('name')
-        print(blog.get('name'), blog.get('timezone'), blog.get('title'))
+    def extracBlog(self, base_url, doc):
+        blog = doc.find('tumblelog')
+        posts = doc.find('posts')
+        total_count = posts.get('total')
+        name = blog.get('name')
+        # tapi.update_total_count(name, total_count)
+        print(blog.get('name'), blog.get('title'), 'total_count',total_count)
 
     def extracItem(self, base_url, item):
         parsed_uri = urlparse(base_url)

@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 watting_url = []
 seen_urls = []
 
-stopping = True
+stopping = False
 
 # 控制并发
 sem = asyncio.Semaphore(5)

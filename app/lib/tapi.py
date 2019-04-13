@@ -9,6 +9,9 @@ import async_task
 r= redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 
+blog_arry=[]
+
+
 # Authenticate via OAuth
 client = pytumblr.TumblrRestClient(
     'CUNchAUJJA0xnZP0Wbb491ZCW4raIYeC8egzPUZZtIAhfmGbZh',
@@ -45,14 +48,35 @@ def extract_post(blogs):
         print(blog)
         r.sadd('blog', json.dumps(blog))
 
+def sort_by_total(x, y):
+    return int(y) - int(x)
 
 def readBlog():
-    blogs = r.smembers('blog')
-    print(len(blogs))
+    blogs = r.lrange('blog_list', 0, -1)
+    blog_list = []
     for blog in blogs:
         blog_dict = json.loads(blog)
-        home_url = blog_dict.get('url')
+        blog_list.append(blog_dict)
+    # 排序
+    blog_list.sort(key = lambda element: int(element['total']), reverse=True)
+
+    for blog in blog_list:
+        # 存储到全局变量
+        home_url = blog.get('url')
         async_task.add_article(home_url+'api/read?num=50')
+
+def update_total_count(name, total_count):
+    return
+    if len(blog_arry) == 0:
+        blogs = r.smembers('blog')
+        for blog in blogs:
+            blog_arry.append(json.loads(blog))
+
+    for blog in blog_arry:
+        if blog.get('name') == name:
+            blog['total'] = total_count
+            print('save blog_list : ', json.dumps(blog))
+            r.lpush('blog_list', json.dumps(blog))
 
 
 if __name__ == '__main__':
