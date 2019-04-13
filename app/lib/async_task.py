@@ -26,8 +26,6 @@ seen_urls = set()
 
 SLEEP_DURATION = 3e-2  # 200ms
 
-proxy = None  # 'http://127.0.0.1:1087'
-
 
 async def fetch(url, session):
     async with semaphore:
