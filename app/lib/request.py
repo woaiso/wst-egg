@@ -5,11 +5,16 @@ import re
 import pathlib
 import math
 import asyncio
+import aiohttp
 import xml.etree.cElementTree as ET
 import urllib.request
 import download
+import config
 
 home_dir = os.environ['HOME']
+
+# 并发控制3
+semaphore = asyncio.Semaphore(3)
 
 
 class Blog:
@@ -21,33 +26,36 @@ class Blog:
     blogName = ''
 
     async def init(self, url):
-        print('fetch:', url)
-        # 第一次请求获取总文章数量，用于计算请求次数
-        doc = await self.fetch(url)
-        total = int(doc.find('posts').get('total'))
-        print('total posts:', total)
-        # 计算出总页数
-        pages = math.ceil(float(total)/self._Blog__pageSize)
-        page = 1
-        while(page < pages):
-            url = url + '&start=' + str(page*self._Blog__pageSize)
-            print('fetch:', str(page*self._Blog__pageSize), '-',
-                  str((page+1)*self._Blog__pageSize), 'of ', total, url)
-            await self.fetch(url)
-            page += 1
+        async with aiohttp.ClientSession() as session:
+            # 第一次请求获取总文章数量，用于计算请求次数
+            doc = await self.fetch(url, session)
+            total = int(doc.find('posts').get('total'))
+            print('total posts:', total)
+            # 计算出总页数
+            pages = math.ceil(float(total)/self._Blog__pageSize)
+            page = 1
+            while page < pages and page < 10:
+                source = url + '&start=' + str(page*self._Blog__pageSize)
+                print('fetch:', str(page*self._Blog__pageSize), '-',
+                    str((page+1)*self._Blog__pageSize), 'of ', total, source)
+                page += 1
+                await self.fetch(source, session)
+                
 
-    @asyncio.coroutine
-    async def fetch(self, url):
-        # 第一次请求获取总文章数量，用于计算请求次数
-        with urllib.request.urlopen(url) as url:
-            s = url.read()
-        doc = ET.fromstring(s)
-        self.extrac(doc)
-        return doc
-
+    async def fetch(self, url, session):
+        async with semaphore:
+            try:
+                print('fetch url: {}'.format(url))
+                async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
+                    if response.status in [200, 201]:
+                        data = await response.text()
+                        doc = ET.fromstring(data)
+                        self.extrac(doc)
+                        return doc
+            except Exception as e:
+                print('error：', e)
     def extrac(self, doc):
         self.extracBlog(doc.find('tumblelog'))
-        print('fetch:', len(doc.findall('posts/post')))
         for item in doc.iterfind('posts/post'):
             self.extracItem(item)
 
@@ -88,17 +96,17 @@ class Blog:
                 video_source = result.group(3)
                 if video_source:
                     # 获取真实文件地址
-                    download.add(self.getRealVideoUrl(video_source))
+                    download.add(video_source)
                     # self.downloads.append(self.getRealVideoUrl(video_source))
                 print(result.group(1), result.group(2), result.group(3))
             else:
                 print('no match!')
 
-    def getRealVideoUrl(self, url):
-        print('video:', url)
-        res = urllib.request.urlopen(url)
-        print(res.info())
-        return res.info().headers['location']
-loop = asyncio.get_event_loop()
-download.init(loop)
-loop.run_until_complete(Blog().init(os.environ.get('EXAMPLE_URL')))
+if __name__ == '__main__':
+    try:
+        loop = asyncio.get_event_loop()
+        download.init(loop)
+        asyncio.ensure_future(Blog().init(os.environ.get('EXAMPLE_URL') + 'api/read?num=50'))
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
