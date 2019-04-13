@@ -4,6 +4,7 @@ import pytumblr
 import json
 import redis
 import math
+import async_task
 
 r= redis.Redis(host='127.0.0.1', port=6379, db=0)
 
@@ -47,12 +48,24 @@ def extract_post(blogs):
 
 def readBlog():
     blogs = r.smembers('blog')
-    print('total count: {}'.format(len(blogs)))
-    # for blog in blogs:
-        # print(json.loads(blog))
-
+    count = 1
+    print(len(blogs))
+    for blog in blogs:
+        if count < 5:
+            count +=1
+            blog_dict = json.loads(blog)
+            print(blog_dict)
+            home_url = blog_dict.get('url')
+            async_task.add_article(home_url+'api/read?num=50')
+        else:
+            break
 
 
 if __name__ == '__main__':
+    try:
+        readBlog()
+        async_task.init()
+    except KeyboardInterrupt:
+        pass
     # store_blog()
-    readBlog()
+    

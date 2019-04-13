@@ -102,6 +102,12 @@ class Blog:
             else:
                 print('no match!')
 
+blog = Blog()
+
+def parser(base_url, xml):
+    doc = ET.fromstring(xml)
+    blog.extrac(doc)
+
 if __name__ == '__main__':
     try:
         loop = asyncio.get_event_loop()

@@ -12,6 +12,7 @@ import config
 from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
 from time import gmtime, strftime
+import blog
 
 # 并发控制3
 semaphore = asyncio.Semaphore(10)
@@ -91,7 +92,7 @@ async def article_handle(url, session):
 
 
 def xml_parser(base_url, xml):
-    print('解析xml')
+    blog.parser(base_url, xml)
 
 
 def html_parser(base_url, html):
@@ -125,7 +126,7 @@ def html_parser(base_url, html):
         author_id = re.search(r'space-uid-(\d+)\.html', author_link).group(1)
     author_name = pq('.authi:eq(0) > a').text()
 
-    print('extract url: {}'.format(url))
+    print('extract url: {}'.format(base_url))
     print(title, view, reply, author_id, author_name, post_at)
 
 
@@ -147,16 +148,20 @@ async def consumer():
                 if url not in seen_urls:
                     asyncio.ensure_future(init_urls(url, session))
 
+def add_article(url):
+    print('add_article:', url)
+    article_urls.append(url)
 
-async def main():
+
+def init():
+    loop = asyncio.get_event_loop()
     asyncio.ensure_future(consumer())
-
+    download.init(loop)
+    loop.run_forever()
+    
 
 if __name__ == '__main__':
     try:
-        loop = asyncio.get_event_loop()
-        asyncio.ensure_future(main())
-        download.init(loop)
-        loop.run_forever()
+        init()
     except KeyboardInterrupt:
         pass
