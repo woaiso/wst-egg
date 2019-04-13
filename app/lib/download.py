@@ -28,11 +28,14 @@ def get_file_name(url):
     return os.path.basename(url)
 
 
-def get_downloadfile_localpath(url):
+def get_downloadfile_localpath(url, base=None):
     # 获取域名作为文件夹名称
     parsed_uri = urlparse(url)
-    dir = '{home_dir}/photo/{uri.netloc}/'.format(
-        uri=parsed_uri, home_dir=home_dir)
+    base_dir = parsed_uri.netloc
+    if base:
+        base_dir = base
+    dir = '{home_dir}/photo/{base_dir}/'.format(
+        base_dir=base_dir, home_dir=home_dir)
     # 识别目录是否存在
     if not pathlib.Path(dir).exists():
         os.makedirs(dir, exist_ok=True)
@@ -41,11 +44,13 @@ def get_downloadfile_localpath(url):
     return file_path
 
 
-async def download_file(url, session):
+async def download_file(task, session):
     async with sem:
         try:
+            url = task.get('url')
+            base = task.get('base')
             # 伪装IP
-            file_path = get_downloadfile_localpath(url)
+            file_path = get_downloadfile_localpath(url, base)
             # 判断是否有文件名，没有文件名则可能为重定向下载
             if not pathlib.Path(file_path).exists():
                 print(
@@ -54,7 +59,7 @@ async def download_file(url, session):
                     if response.status in [303]:
                         real_url = response.headers['Location']
                         print('redirect download: {}'.format(real_url))
-                        asyncio.ensure_future(download_file(real_url, session))
+                        asyncio.ensure_future(download_file({'url': real_url, 'base': base}, session))
                     elif response.status in [200, 201]:
                         with open(file_path, 'wb') as outfile:
                             while True:
@@ -79,20 +84,18 @@ async def download_multiple():
                 await asyncio.sleep(5)  # 暂时无处理的URL则休眠5秒
                 continue
             else:
-                source_url = watting_url.pop()
-                asyncio.ensure_future(download_file(source_url, session))
+                task = watting_url.pop()
+                asyncio.ensure_future(download_file(task, session))
 
 
 def init(loop):
     loop.create_task(download_multiple())
 
-
-def add(url):
-    watting_url.append(url)
-
-
-if __name__ == '__main__':
-    add('https://twitter-tbr3w666.tumblr.com/video_file/t:A4UZIomQA9P3ULyK_5oIMg/184134989696/tumblr_oynmrrkmFs1wuw0ld/480')
-    loop = asyncio.get_event_loop()
-    init(loop)
-    loop.run_forever()
+""" add download task
+    params
+    ------------
+    url : string
+    baser_dir: download dir
+"""
+def add(url, base_dir):
+    watting_url.append({'url':url, 'base': base_dir})

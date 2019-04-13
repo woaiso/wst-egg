@@ -51,7 +51,7 @@ def readBlog():
     count = 1
     print(len(blogs))
     for blog in blogs:
-        if count < 5:
+        if count < 50:
             count +=1
             blog_dict = json.loads(blog)
             print(blog_dict)

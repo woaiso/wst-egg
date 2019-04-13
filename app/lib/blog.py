@@ -8,6 +8,7 @@ import asyncio
 import aiohttp
 import xml.etree.cElementTree as ET
 import urllib.request
+from urllib.parse import urlparse
 import download
 import config
 
@@ -25,45 +26,18 @@ class Blog:
 
     blogName = ''
 
-    async def init(self, url):
-        async with aiohttp.ClientSession() as session:
-            # 第一次请求获取总文章数量，用于计算请求次数
-            doc = await self.fetch(url, session)
-            total = int(doc.find('posts').get('total'))
-            print('total posts:', total)
-            # 计算出总页数
-            pages = math.ceil(float(total)/self._Blog__pageSize)
-            page = 1
-            while page < pages and page < 10:
-                source = url + '&start=' + str(page*self._Blog__pageSize)
-                print('fetch:', str(page*self._Blog__pageSize), '-',
-                    str((page+1)*self._Blog__pageSize), 'of ', total, source)
-                page += 1
-                await self.fetch(source, session)
-                
-
-    async def fetch(self, url, session):
-        async with semaphore:
-            try:
-                print('fetch url: {}'.format(url))
-                async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
-                    if response.status in [200, 201]:
-                        data = await response.text()
-                        doc = ET.fromstring(data)
-                        self.extrac(doc)
-                        return doc
-            except Exception as e:
-                print('error：', e)
-    def extrac(self, doc):
-        self.extracBlog(doc.find('tumblelog'))
+    def extrac(self, base_url, doc):
+        self.extracBlog(base_url, doc.find('tumblelog'))
         for item in doc.iterfind('posts/post'):
-            self.extracItem(item)
+            self.extracItem(base_url,item)
 
-    def extracBlog(self, blog):
+    def extracBlog(self, base_url, blog):
         self.blogName = blog.get('name')
         print(blog.get('name'), blog.get('timezone'), blog.get('title'))
 
-    def extracItem(self, item):
+    def extracItem(self, base_url, item):
+        parsed_uri = urlparse(base_url)
+        domain = parsed_uri.netloc
         type = item.get('type')
         if type == 'regular':  # 普通文本
             body = item.find('regular-body')
@@ -81,11 +55,11 @@ class Blog:
                 # 多张图片处理逻辑
                 for photo in photoset.iterfind('photo'):
                     photo_url = photo.find('photo-url').text
-                    download.add(photo_url)
+                    download.add(photo_url, domain)
             else:
                 # 单张图片处理逻辑
                 photo_url = item.find('photo-url').text
-                download.add(photo_url)
+                download.add(photo_url, domain)
         elif type == 'video':
             videostr = item.find('video-player').text
             result = re.search(
@@ -94,7 +68,7 @@ class Blog:
                 video_source = result.group(3)
                 if video_source:
                     # 获取真实文件地址
-                    download.add(video_source)
+                    download.add(video_source, domain)
                 print(result.group(1), result.group(2), result.group(3))
             else:
                 print('no match!')
@@ -103,13 +77,4 @@ blog = Blog()
 
 def parser(base_url, xml):
     doc = ET.fromstring(xml)
-    blog.extrac(doc)
-
-if __name__ == '__main__':
-    try:
-        loop = asyncio.get_event_loop()
-        download.init(loop)
-        asyncio.ensure_future(Blog().init(os.environ.get('EXAMPLE_URL') + 'api/read?num=50'))
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
+    blog.extrac(base_url, doc)
