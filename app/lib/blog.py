@@ -62,19 +62,21 @@ class Blog:
                 download.add(photo_url, domain)
         elif type == 'video':
             videostr = item.find('video-player').text
-            result = re.search(
-                r'poster=\'(.*?)\'[\s\S]+duration\":(\d+)[\s\S]+source\ssrc=\"(.*?)\"', videostr, re.M | re.I)
-            if result:
-                video_source = result.group(3)
-                if video_source:
-                    # 获取真实文件地址
-                    download.add(video_source, domain)
-                print(result.group(1), result.group(2), result.group(3))
-            else:
-                print('no match!')
+            try:
+                result = re.search(
+                    r'poster=\'(.*?)\'[\s\S]+duration\":(\d+)[\s\S]+source\ssrc=\"(.*?)\"', videostr, re.M | re.I)
+                if result:
+                    video_source = result.group(3)
+                    if video_source:
+                        # 获取真实文件地址
+                        download.add(video_source, domain)
+                    # print(result.group(1), result.group(2), result.group(3))
+            except TypeError:
+                pass
 
 blog = Blog()
 
 def parser(base_url, xml):
+    xml=re.sub(u"[\x00-\x08\x0b-\x0c\x0e-\x1f]+",u"",xml)
     doc = ET.fromstring(xml)
     blog.extrac(base_url, doc)
