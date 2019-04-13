@@ -26,17 +26,18 @@ SLEEP_DURATION = 2e-2  # 200ms
 
 proxy = None  # 'http://127.0.0.1:1087'
 
+
 async def fetch(url, session):
     async with semaphore:
         try:
             # 伪装IP
             print('fetch url: {}'.format(url))
             async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
-                # for key in response.headers:
-                #     print(key, ':',response.headers[key])
+                print(response.headers['Content-Type'])
                 if response.status in [200, 201]:
                     data = await response.text()
-                    return data
+                    result = {'data': data, 'headers': response.headers}
+                    return result
         except Exception as e:
             print('error：', e)
 
@@ -72,15 +73,20 @@ def extract_urls(source_url, html):
 
 async def init_urls(url, session):
     seen_urls.add(url)
-    html = await fetch(url, session)
-    extract_urls(url, html)
+    result = await fetch(url, session)
+    extract_urls(url, result.data)
 
 # 解析文章
 
 
 async def article_handle(url, session):
     seen_urls.add(url)
-    html = await fetch(url, session)
+    result = await fetch(url, session)
+    # 判断响应类型，使用不同的parser
+
+
+
+    html = result.data
     extract_urls(url, html)
     if not html:
         print('document none {}'.format(url))
@@ -126,21 +132,17 @@ async def consumer():
             # 增加优先策略 优先处理文章URL，文章无再处理列表url
             if len(article_urls) > 0:
                 url = article_urls.pop()
+                if url not in seen_urls:
+                    asyncio.ensure_future(article_handle(url, session))
             elif len(list_urls) > 0:
                 url = list_urls.pop()
-            if url not in seen_urls:
-                if re.search(r'((\/htm_data[\s\S]+\.html)|(\/viewthread\.php)|(\/thread-\d+-\d+-\d+))', url):
-                    asyncio.ensure_future(article_handle(url, session))
-                else:
+                if url not in seen_urls:
                     asyncio.ensure_future(init_urls(url, session))
 
 
 async def main():
-    async with aiohttp.ClientSession() as session:
-        html = await fetch(start_url, session)
-        seen_urls.add(start_url)
-        extract_urls(start_url, html)
     asyncio.ensure_future(consumer())
+
 
 if __name__ == '__main__':
     try:
