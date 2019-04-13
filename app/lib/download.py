@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 watting_url = []
 seen_urls = []
 
-stopping = False
+stopping = True
 
 # 控制并发
 sem = asyncio.Semaphore(5)
@@ -97,5 +97,5 @@ def init(loop):
     url : string
     baser_dir: download dir
 """
-def add(url, base_dir):
+def add(url, base_dir=None):
     watting_url.append({'url':url, 'base': base_dir})

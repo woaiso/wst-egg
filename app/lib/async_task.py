@@ -13,9 +13,10 @@ from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
 from time import gmtime, strftime
 import blog
+import page_cache
 
 # 并发控制3
-semaphore = asyncio.Semaphore(10)
+semaphore = asyncio.Semaphore(5)
 # 标记状态
 stopping = False
 start_url = os.environ.get('SEED_URL')
@@ -23,7 +24,7 @@ list_urls = []
 article_urls = []
 seen_urls = set()
 
-SLEEP_DURATION = 2e-2  # 200ms
+SLEEP_DURATION = 3e-2  # 200ms
 
 proxy = None  # 'http://127.0.0.1:1087'
 
@@ -33,12 +34,23 @@ async def fetch(url, session):
         try:
             # 伪装IP
             print('fetch url: {}'.format(url))
-            async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
-                print(response.headers['Content-Type'])
-                if response.status in [200, 201]:
-                    data = await response.text()
-                    result = {'data': data, 'headers': response.headers}
-                    return result
+            # 判断缓存内是否有内容，如果有直接返回
+            if page_cache.check_exists(url):
+                print('use cache : {}'.format(url))
+                return page_cache.get(url)
+            else:
+                async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
+                    if response.status in [200, 201]:
+                        data = await response.text()
+                        headers = {
+                            'Content-Type': response.headers.get('Content-Type')
+                        }
+                        result = {'data': data, 'headers': headers}
+                        page_cache.set(url, result)
+                        return result
+                    else:
+                        page_cache.set(url, None)
+                        return None
         except Exception as e:
             print('error：', e)
 
@@ -83,12 +95,13 @@ async def init_urls(url, session):
 async def article_handle(url, session):
     seen_urls.add(url)
     result = await fetch(url, session)
-    # 判断响应类型，使用不同的parser
-    content_type = result.get('headers').get('Content-Type')
-    if content_type.find('text/html') > -1:
-        return html_parser(url, result.get('data'))
-    elif content_type.find('text/xml') > -1:
-        return xml_parser(url, result.get('data'))
+    if result:
+        # 判断响应类型，使用不同的parser
+        content_type = result.get('headers').get('Content-Type')
+        if content_type.find('text/html') > -1:
+            return html_parser(url, result.get('data'))
+        elif content_type.find('text/xml') > -1:
+            return xml_parser(url, result.get('data'))
 
 
 def xml_parser(base_url, xml):
@@ -149,7 +162,6 @@ async def consumer():
                     asyncio.ensure_future(init_urls(url, session))
 
 def add_article(url):
-    print('add_article:', url)
     article_urls.append(url)
 
 
