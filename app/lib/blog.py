@@ -82,12 +82,10 @@ class Blog:
                 for photo in photoset.iterfind('photo'):
                     photo_url = photo.find('photo-url').text
                     download.add(photo_url)
-                    # self.downloads.append(photo_url)
             else:
                 # 单张图片处理逻辑
                 photo_url = item.find('photo-url').text
                 download.add(photo_url)
-                # self.downloads.append(photo_url)
         elif type == 'video':
             videostr = item.find('video-player').text
             result = re.search(
@@ -97,7 +95,6 @@ class Blog:
                 if video_source:
                     # 获取真实文件地址
                     download.add(video_source)
-                    # self.downloads.append(self.getRealVideoUrl(video_source))
                 print(result.group(1), result.group(2), result.group(3))
             else:
                 print('no match!')
