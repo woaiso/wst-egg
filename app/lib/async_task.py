@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# 异步编程学习
+# 用于处理抓取任务，支持外部添加任务，支持控制并发
 # encoding=utf-8
 
 import asyncio
