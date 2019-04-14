@@ -16,7 +16,7 @@ import blog
 import page_cache
 
 # 并发控制3
-semaphore = asyncio.Semaphore(100)
+semaphore = asyncio.Semaphore(5)
 # 标记状态
 stopping = False
 start_url = os.environ.get('SEED_URL')
@@ -30,13 +30,13 @@ SLEEP_DURATION = 3e-2  # 200ms
 async def fetch(url, session):
     async with semaphore:
         try:
-            # 伪装IP
-            print('fetch url: {}'.format(url))
             # 判断缓存内是否有内容，如果有直接返回
             if page_cache.check_exists(url):
                 print('use cache : {}'.format(url))
                 return page_cache.get(url)
             else:
+                await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
+                print('fetch url: {}'.format(url))
                 async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
                     if response.status in [200, 201]:
                         data = await response.text()
@@ -144,7 +144,6 @@ def html_parser(base_url, html):
 async def consumer():
     async with aiohttp.ClientSession() as session:
         while not stopping:
-            # await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
             # 识别列表队列和文章队列是否还有内容
             if len(article_urls) == 0 and len(list_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
