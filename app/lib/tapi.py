@@ -9,6 +9,9 @@ import async_task
 r= redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 
+
+MAX_TOTAL_PROC = 100
+
 blog_arry=[]
 
 
@@ -56,7 +59,10 @@ def readBlog():
     blog_list = []
     for blog in blogs:
         blog_dict = json.loads(blog)
-        blog_list.append(blog_dict)
+        total = int(blog_dict['total'])
+        # 增加阈值，仅处理total<某个数值的内容
+        if total < MAX_TOTAL_PROC and total > 0:
+            blog_list.append(blog_dict)
     # 排序
     blog_list.sort(key = lambda element: int(element['total']), reverse=True)
 
