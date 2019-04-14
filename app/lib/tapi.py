@@ -66,7 +66,6 @@ def readBlog():
         async_task.add_article(home_url+'api/read?num=50')
 
 def update_total_count(name, total_count):
-    return
     if len(blog_arry) == 0:
         blogs = r.smembers('blog')
         for blog in blogs:

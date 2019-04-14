@@ -32,7 +32,6 @@ class Blog:
         posts = doc.find('posts')
         total_count = posts.get('total')
         name = blog.get('name')
-        # tapi.update_total_count(name, total_count)
         print(blog.get('name'), blog.get('title'), 'total_count',total_count)
 
     def extracItem(self, base_url, item):
