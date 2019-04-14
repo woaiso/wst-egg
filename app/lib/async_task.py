@@ -144,7 +144,7 @@ def html_parser(base_url, html):
 async def consumer():
     async with aiohttp.ClientSession() as session:
         while not stopping:
-            await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
+            # await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
             # 识别列表队列和文章队列是否还有内容
             if len(article_urls) == 0 and len(list_urls) == 0:
                 await asyncio.sleep(1)  # 无处理的URL时等待1秒钟
