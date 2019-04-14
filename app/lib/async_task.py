@@ -16,7 +16,7 @@ import blog
 import page_cache
 
 # 并发控制3
-semaphore = asyncio.Semaphore(10)
+semaphore = asyncio.Semaphore(100)
 # 标记状态
 stopping = False
 start_url = os.environ.get('SEED_URL')
