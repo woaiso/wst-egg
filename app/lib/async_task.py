@@ -7,13 +7,14 @@ import aiohttp
 import os
 import re
 import random
-import download
-import config
+import dowload
+from .config import request_header, proxy
 from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
 from time import gmtime, strftime
 import blog
 import page_cache
+
 
 # 并发控制3
 semaphore = asyncio.Semaphore(5)
@@ -37,7 +38,7 @@ async def fetch(url, session):
             else:
                 await asyncio.sleep(SLEEP_DURATION)  # 处理一次等待一定时间
                 print('fetch url: {}'.format(url))
-                async with session.get(url, headers=config.request_header(), proxy=config.proxy) as response:
+                async with session.get(url, headers=request_header(), proxy=proxy) as response:
                     if response.status in [200, 201]:
                         data = await response.text()
                         headers = {
@@ -176,6 +177,7 @@ def init():
 
 if __name__ == '__main__':
     try:
+        add_article('http://www.chdmv.com/forum-42-1.html')
         init()
     except KeyboardInterrupt:
         pass

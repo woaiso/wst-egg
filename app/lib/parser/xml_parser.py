@@ -1,16 +1,24 @@
-# Python 学习（python3）
+
+#!/usr/bin/python3
 # coding=utf-8
-import os
-import re
-import pathlib
-import math
-import asyncio
+# XML 解析器，用于处理xml类型的数据
+
 import aiohttp
-import xml.etree.cElementTree as ET
+import asyncio
+import math
+import os
+import pathlib
+
+import re
 import urllib.request
+import xml.etree.cElementTree as ET
 from urllib.parse import urlparse
-import download
-from . import proxy, request_header
+
+from .base import BaseParser
+
+import config
+from app.lib.download import * as download
+
 # import tapi
 
 home_dir = os.environ['HOME']
@@ -19,7 +27,7 @@ home_dir = os.environ['HOME']
 semaphore = asyncio.Semaphore(3)
 
 
-class Blog:
+class Blog(BaseParser):
     '这是一个博客数据收集脚本'
 
     def extrac(self, base_url, doc):
@@ -46,7 +54,7 @@ class Blog:
                 pass
         elif type == 'photo':  # 照片类
             desc_ele = item.find('photo-caption')
-            desc_text = ''
+            desc_text =''
             if desc_ele is not None:
                 desc_text = desc_ele.text
             photo_list = extract_photo(item, domain)

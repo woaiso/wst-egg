@@ -92,10 +92,9 @@ def init(loop):
     loop.create_task(download_multiple())
 
 """ add download task
-    params
     ------------
-    url : string
-    baser_dir: download dir
+    :param url: string
+    :param baser_dir: string download dir
 """
 def add(url, base_dir=None):
     watting_url.append({'url':url, 'base': base_dir})
