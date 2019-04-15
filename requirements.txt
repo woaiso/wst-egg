@@ -1,5 +1,0 @@
-aiohttp
-cchardet
-aiodns
-asyncio
-redis
