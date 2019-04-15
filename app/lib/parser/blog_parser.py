@@ -1,14 +1,12 @@
 
-#!/usr/bin/python3
-# coding=utf-8
-# XML 解析器，用于处理xml类型的数据
+#!/usr/local/bin/python3
+# -*-coding:utf-8-*-
 
 import aiohttp
 import asyncio
 import math
 import os
 import pathlib
-
 import re
 import urllib.request
 import xml.etree.cElementTree as ET
@@ -16,31 +14,53 @@ from urllib.parse import urlparse
 
 from .base import BaseParser
 
-import config
-from app.lib.download import * as download
+from .. import add_download_task
 
-# import tapi
-
-home_dir = os.environ['HOME']
-
-# 并发控制3
-semaphore = asyncio.Semaphore(3)
+# 博客数据解析器
 
 
-class Blog(BaseParser):
-    '这是一个博客数据收集脚本'
+class BlogParser(BaseParser):
+    blog_name = None  # 博客名称
+    total_count = 0  # 博文总数量
+
+    """
+        博客数据解析器
+        
+        :param base_url: string xml address
+        :param xml     : string xml content data
+    """
+
+    def __init__(self, base_url, xml):
+        # 去除特殊字符，避免编译出错
+        xml = re.sub(u"[\x00-\x08\x0b-\x0c\x0e-\x1f]+", u"", xml)
+        doc = ET.fromstring(xml)
+        self.extrac(base_url, doc)
+
+    """
+        解析数据
+
+        :param base_url: string xml address
+        :param doc     : ElementTree dom tree
+    """
 
     def extrac(self, base_url, doc):
         self.extracBlog(base_url, doc)
         for item in doc.iterfind('posts/post'):
             self.extracItem(base_url, item)
 
+    """
+        获取博客基础信息
+        :param base_url: string xml address
+        :param doc     : ElementTree dom tree
+    """
+
     def extracBlog(self, base_url, doc):
         blog = doc.find('tumblelog')
         posts = doc.find('posts')
-        total_count = posts.get('total')
-        name = blog.get('name')
-        print(blog.get('name'), blog.get('title'), 'total_count', total_count)
+        self.total_count = posts.get('total')
+        self.blog_name = blog.get('name')
+        print(self.blog_name, blog.get('title'),
+              'total_count', self.total_count)
 
     def extracItem(self, base_url, item):
         parsed_uri = urlparse(base_url)
@@ -54,10 +74,11 @@ class Blog(BaseParser):
                 pass
         elif type == 'photo':  # 照片类
             desc_ele = item.find('photo-caption')
-            desc_text =''
+            desc_text = ''
             if desc_ele is not None:
                 desc_text = desc_ele.text
             photo_list = extract_photo(item, domain)
+            print(post_url, desc_text, len(photo_list))
         elif type == 'video':
             videostr = item.find('video-player').text
             try:
@@ -67,7 +88,7 @@ class Blog(BaseParser):
                     video_source = result.group(3)
                     if video_source:
                         # 获取真实文件地址
-                        download.add(video_source, domain)
+                        add_download_task(video_source, domain)
                         pass
                     # print(result.group(1), result.group(2), result.group(3))
             except TypeError:
@@ -83,19 +104,10 @@ def extract_photo(post, domain):
         for photo in photoset.iterfind('photo'):
             photo_url = photo.find('photo-url').text
             photo_list.append(photo_url)
-            download.add(photo_url, domain)
+            add_download_task(photo_url, domain)
     else:
         # 单张图片处理逻辑
         photo_url = post.find('photo-url').text
         photo_list.append(photo_url)
-        download.add(photo_url, domain)
+        add_download_task(photo_url, domain)
     return photo_list
-
-
-blog = Blog()
-
-
-def parser(base_url, xml):
-    xml = re.sub(u"[\x00-\x08\x0b-\x0c\x0e-\x1f]+", u"", xml)
-    doc = ET.fromstring(xml)
-    blog.extrac(base_url, doc)

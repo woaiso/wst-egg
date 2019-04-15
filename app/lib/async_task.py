@@ -7,12 +7,12 @@ import aiohttp
 import os
 import re
 import random
-import dowload
+from .download import add_download_task
 from .config import request_header, proxy
 from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
 from time import gmtime, strftime
-import blog
+from .parser import BlogParser
 import page_cache
 
 
@@ -109,7 +109,7 @@ async def article_handle(url, session):
 
 
 def xml_parser(base_url, xml):
-    blog.parser(base_url, xml)
+    BlogParser(base_url, xml)
 
 
 def html_parser(base_url, html):
@@ -134,7 +134,7 @@ def html_parser(base_url, html):
         src = PyQuery(img).attr('src')
         full_photo_url = urljoin(base_url, src)
         images.append(full_photo_url)
-        download.add(full_photo_url)
+        add_download_task(full_photo_url)
 
     # 解析作者相关信息
     author_link = pq('.authi:eq(0) > a').attr('href')
@@ -175,6 +175,9 @@ def init():
     loop.run_forever()
     
 
+
+
+# only for unit test
 if __name__ == '__main__':
     try:
         add_article('http://www.chdmv.com/forum-42-1.html')

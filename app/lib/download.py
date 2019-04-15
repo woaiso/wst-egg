@@ -98,3 +98,7 @@ def init(loop):
 """
 def add(url, base_dir=None):
     watting_url.append({'url':url, 'base': base_dir})
+
+
+def add_download_task(source_url, base_dir=None):
+    watting_url.append({'url': source_url, 'base': base_dir})

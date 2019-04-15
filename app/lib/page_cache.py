@@ -4,8 +4,9 @@ import redis
 import hashlib
 import json
 
+from .settings import REDIS_HOST, REDIS_PORT
 
-r= redis.Redis(host='127.0.0.1', port=6379, db=0)
+r= redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 def get_md5_hex(str):
     m2 = hashlib.md5()   
