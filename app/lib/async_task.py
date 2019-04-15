@@ -50,7 +50,12 @@ async def fetch(url, session):
                         page_cache.set(url, None)
                         return None
         except Exception as e:
-            print('error：', e)
+            print('error：', e , 'sleep')
+            await asyncio.sleep(5)  # 报错后多睡眠，然后重新发起请求
+            print('sleep end retry')
+            return fetch(url, session)
+
+            
 
 # 解析出所有链接
 
