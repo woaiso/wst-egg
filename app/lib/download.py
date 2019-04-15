@@ -88,7 +88,7 @@ async def download_multiple():
                 asyncio.ensure_future(download_file(task, session))
 
 
-def init(loop):
+def init_download_proc(loop):
     loop.create_task(download_multiple())
 
 """ add download task

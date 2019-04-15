@@ -7,8 +7,8 @@ import aiohttp
 import os
 import re
 import random
-from .download import add_download_task
-from .config import request_header, proxy
+from . import request_header, proxy
+from . import add_download_task, init_download_proc
 from pyquery import PyQuery
 from urllib.parse import urljoin, urlparse
 from time import gmtime, strftime
@@ -168,19 +168,15 @@ def add_article(url):
     article_urls.append(url)
 
 
-def init():
-    loop = asyncio.get_event_loop()
-    asyncio.ensure_future(consumer())
-    download.init(loop)
-    loop.run_forever()
-    
-
 
 
 # only for unit test
 if __name__ == '__main__':
     try:
         add_article('http://www.chdmv.com/forum-42-1.html')
-        init()
+        loop = asyncio.get_event_loop()
+        asyncio.ensure_future(consumer())
+        init_download_proc(loop)
+        loop.run_forever()
     except KeyboardInterrupt:
         pass

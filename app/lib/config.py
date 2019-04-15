@@ -1,5 +1,8 @@
 
+import asyncio
 import random
+
+semaphore = asyncio.Semaphore(5)
 
 def request_header(source_url=None):
     return {
