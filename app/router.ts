@@ -22,6 +22,9 @@ export default (app: Application) => {
 
   router.post('/dribbble_task/list', controller.dribbble.fetchDribbbleTask);
 
+  // 数据相关
+  router.post('/data/post/get', controller.data.getPosts);
+
   // 仅系统级别使用
   router.get('/system/initial_account', controller.system.initialDribbbleAccount);
   router.get('/system/fllow', controller.system.fllow);
